@@ -1,5 +1,6 @@
 package software.ulpgc.chess;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public final class Board {
@@ -84,5 +85,45 @@ public final class Board {
 
     public int pieceCount() {
         return pieces.size();
+    }
+
+    public Board move(Square from, Square to){
+        Piece piece = pieces.get(from);
+        Piece capturedPiece = pieces.get(to);
+
+        Map<Square, Piece> newPieces = new HashMap<>(pieces);
+        newPieces.remove(from);
+        newPieces.put(to, piece);
+
+        CastlingRights newRights = castlingRights;
+
+        if (piece == Piece.WhiteKing) newRights = newRights.withoutWhiteCastling();
+        if (piece == Piece.BlackKing) newRights = newRights.withoutBlackCastling();
+
+        if (piece == Piece.WhiteRook){
+            if (from.equals(Square.at("a1"))) newRights = newRights.withoutWhiteQueenSide();
+            if (from.equals(Square.at("h1"))) newRights = newRights.withoutWhiteKingSide();
+        }
+        if (piece == Piece.BlackRook){
+            if (from.equals(Square.at("a8"))) newRights = newRights.withoutBlackQueenSide();
+            if (from.equals(Square.at("h8"))) newRights = newRights.withoutBlackKingSide();
+        }
+
+        if (capturedPiece == Piece.WhiteRook){
+            if (to.equals(Square.at("a1"))) newRights = newRights.withoutWhiteQueenSide();
+            if (to.equals(Square.at("h1"))) newRights = newRights.withoutWhiteKingSide();
+        }
+        if (capturedPiece == Piece.BlackRook){
+            if (to.equals(Square.at("a8"))) newRights = newRights.withoutBlackQueenSide();
+            if (to.equals(Square.at("h8"))) newRights = newRights.withoutBlackKingSide();
+        }
+
+        Square newEnPassantTarget = null;
+
+        if (piece != null && piece.type() == PieceType.Pawn && Math.abs(to.rank().value() - from.rank().value()) == 2){
+            int middleRankValue = (from.rank().value() + to.rank().value()) / 2;
+            newEnPassantTarget = new Square(from.file(), Rank.fromValue(middleRankValue));
+        }
+        return new Board(newPieces, newRights, newEnPassantTarget);
     }
 }
