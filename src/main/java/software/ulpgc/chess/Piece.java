@@ -22,6 +22,14 @@ public enum Piece {
         this.type = type;
     }
 
+    public Color color(){
+        return color;
+    }
+
+    public PieceType type(){
+        return type;
+    }
+
     public char symbol(){
         char base = type.symbol();
         return color == Color.White ? Character.toUpperCase(base) : base;
