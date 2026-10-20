@@ -1,4 +1,4 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 import java.util.HashMap;
 import java.util.Map;

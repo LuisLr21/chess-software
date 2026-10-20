@@ -1,4 +1,4 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 public record Position(Board board, Color sideToMove, CastlingRights castlingRights, Square enPassantTarget) {
     public static Position initial(){

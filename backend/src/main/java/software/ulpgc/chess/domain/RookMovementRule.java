@@ -1,12 +1,12 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
-public class KnightMovementRule implements MovementRule{
+public class RookMovementRule implements MovementRule{
 
     @Override
     public boolean canMove(Position position, Square from, Square to){
         Board board = position.board();
         Piece movingPiece = board.pieceAt(from);
-        if (movingPiece == null || movingPiece.type() != PieceType.Knight){
+        if (movingPiece == null || movingPiece.type() != PieceType.Rook){
             return false;
         }
         if (isOccupiedBySameColor(board, to, movingPiece.color())){
@@ -14,7 +14,7 @@ public class KnightMovementRule implements MovementRule{
         }
         int fileDiff = Math.abs(to.file().ordinal() - from.file().ordinal());
         int rankDiff = Math.abs(to.rank().value() - from.rank().value());
-
-        return (fileDiff == 1 && rankDiff == 2) || (fileDiff == 2 && rankDiff == 1);
+        if (fileDiff != 0 && rankDiff != 0) return false;
+        return isPathClear(board, from, to);
     }
 }

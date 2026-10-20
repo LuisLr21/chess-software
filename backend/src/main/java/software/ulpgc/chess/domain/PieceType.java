@@ -1,4 +1,4 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 public enum PieceType {
     Pawn('p'), Knight('n'), Bishop('b'), Rook('r'), Queen('q'), King('k');

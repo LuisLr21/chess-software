@@ -1,4 +1,4 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 public record Square(File file, Rank rank) {
     public static Square at(String square) {

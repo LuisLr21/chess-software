@@ -1,4 +1,4 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 public class LegalMoveValidator {
     private final MovementRule rules = new MovementRules();

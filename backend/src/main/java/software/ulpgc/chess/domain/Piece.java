@@ -1,4 +1,4 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 public enum Piece {
     WhitePawn(Color.White, PieceType.Pawn),
