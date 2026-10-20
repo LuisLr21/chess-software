@@ -1,6 +1,7 @@
 package software.ulpgc.chess.infrastructure;
 
 import io.javalin.Javalin;
+import io.javalin.plugin.bundled.CorsPluginConfig;
 import software.ulpgc.chess.application.CreateGameUseCase;
 import software.ulpgc.chess.application.GameRepository;
 import software.ulpgc.chess.application.GetGameUseCase;
@@ -17,8 +18,10 @@ public class Main {
                 new MovePieceUseCase(repository)
         );
 
-        Javalin app = Javalin.create(config -> config.bundledPlugins.enableCors(cors -> cors.addRule(rule -> rule.anyHost())));
-        controller.register(app);
+        Javalin app = Javalin.create(config -> {
+            config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
+            controller.register(config.routes);
+        });
 
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "7070"));
         app.start(port);

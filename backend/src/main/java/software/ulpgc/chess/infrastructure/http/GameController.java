@@ -1,6 +1,6 @@
 package software.ulpgc.chess.infrastructure.http;
 
-import io.javalin.Javalin;
+import io.javalin.config.RoutesConfig;
 import software.ulpgc.chess.application.CreateGameUseCase;
 import software.ulpgc.chess.application.GameNotFoundException;
 import software.ulpgc.chess.application.GetGameUseCase;
@@ -20,19 +20,19 @@ public class GameController {
         this.movePiece = movePiece;
     }
 
-    public void register(Javalin app) {
-        app.post("/games", ctx -> ctx.status(201).json(GameResponse.from(createGame.execute())));
+    public void register(RoutesConfig routes) {
+        routes.post("/games", ctx -> ctx.status(201).json(GameResponse.from(createGame.execute())));
 
-        app.get("/games/{id}", ctx -> ctx.json(GameResponse.from(getGame.execute(ctx.pathParam("id")))));
+        routes.get("/games/{id}", ctx -> ctx.json(GameResponse.from(getGame.execute(ctx.pathParam("id")))));
 
-        app.post("/games/{id}/moves", ctx -> {
+        routes.post("/games/{id}/moves", ctx -> {
             MoveRequest request = ctx.bodyAsClass(MoveRequest.class);
             Game game = movePiece.execute(ctx.pathParam("id"), Square.at(request.from()), Square.at(request.to()));
             ctx.json(GameResponse.from(game));
         });
 
-        app.exception(GameNotFoundException.class, (e, ctx) -> ctx.status(404).json(new ErrorResponse(e.getMessage())));
-        app.exception(IllegalMoveException.class, (e, ctx) -> ctx.status(422).json(new ErrorResponse(e.getMessage())));
-        app.exception(IllegalArgumentException.class, (e, ctx) -> ctx.status(400).json(new ErrorResponse(e.getMessage())));
+        routes.exception(GameNotFoundException.class, (e, ctx) -> ctx.status(404).json(new ErrorResponse(e.getMessage())));
+        routes.exception(IllegalMoveException.class, (e, ctx) -> ctx.status(422).json(new ErrorResponse(e.getMessage())));
+        routes.exception(IllegalArgumentException.class, (e, ctx) -> ctx.status(400).json(new ErrorResponse(e.getMessage())));
     }
 }
