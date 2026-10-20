@@ -1,0 +1,14 @@
+package software.ulpgc.chess;
+
+public class LegalMoveValidator {
+    private final MovementRule rules = new MovementRules();
+    private final CheckDetector checkDetector = new CheckDetector();
+
+    public boolean isLegal(Position position, Square from, Square to) {
+        Piece piece = position.board().pieceAt(from);
+        if (piece == null) return false;
+        if (!rules.canMove(position, from, to)) return false;
+        Position after = position.move(from, to);
+        return !checkDetector.isInCheck(after, piece.color());
+    }
+}
