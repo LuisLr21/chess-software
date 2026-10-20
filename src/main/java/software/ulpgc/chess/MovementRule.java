@@ -2,7 +2,7 @@ package software.ulpgc.chess;
 
 
 public interface MovementRule {
-    boolean canMove(Board board, Square from, Square to);
+    boolean canMove(Position position, Square from, Square to);
 
     default boolean isOccupiedBySameColor(Board board, Square square, Color color){
         Piece piece = board.pieceAt(square);

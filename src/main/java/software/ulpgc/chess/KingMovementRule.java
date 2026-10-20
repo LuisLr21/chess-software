@@ -3,7 +3,8 @@ package software.ulpgc.chess;
 public class KingMovementRule implements MovementRule{
 
     @Override
-    public boolean canMove(Board board, Square from, Square to){
+    public boolean canMove(Position position, Square from, Square to){
+        Board board = position.board();
         Piece movingPiece = board.pieceAt(from);
         if (movingPiece == null || movingPiece.type() != PieceType.King){
             return false;
