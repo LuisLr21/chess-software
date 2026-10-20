@@ -8,8 +8,10 @@ public record Position(Board board, Color sideToMove, CastlingRights castlingRig
     public Position move(Square from, Square to){
         Piece piece = board.pieceAt(from);
         Piece capturedPiece = board.pieceAt(to);
+        Board newBoard = board.move(from, to);
+        if (isEnPassantCapture(piece, to)) newBoard = newBoard.remove(new Square(to.file(), from.rank()));
         return new Position(
-                board.move(from, to),
+                newBoard,
                 sideToMove.opposite(),
                 castlingRightsAfter(piece, capturedPiece, from, to),
                 enPassantTargetAfter(piece, from, to)
@@ -46,5 +48,9 @@ public record Position(Board board, Color sideToMove, CastlingRights castlingRig
         if (Math.abs(to.rank().value() - from.rank().value()) != 2) return null;
         int middleRankValue = (from.rank().value() + to.rank().value()) / 2;
         return new Square(from.file(), Rank.fromValue(middleRankValue));
+    }
+
+    private boolean isEnPassantCapture(Piece piece, Square to) {
+        return piece != null && piece.type() == PieceType.Pawn && to.equals(enPassantTarget);
     }
 }

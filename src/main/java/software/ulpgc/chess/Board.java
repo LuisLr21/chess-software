@@ -75,6 +75,12 @@ public final class Board {
         return new Board(newPieces);
     }
 
+    public Board remove(Square square){
+        Map<Square, Piece> newPieces = new HashMap<>(pieces);
+        newPieces.remove(square);
+        return new Board(newPieces);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
