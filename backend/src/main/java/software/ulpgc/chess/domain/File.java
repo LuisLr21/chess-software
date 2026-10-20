@@ -21,6 +21,7 @@ public enum File {
             case 'e' -> E;
             case 'f' -> F;
             case 'g' -> G;
+            case 'h' -> H;
             default -> throw new IllegalArgumentException("Invalid file: " + symbol);
         };
     }
