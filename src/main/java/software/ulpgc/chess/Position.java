@@ -1,8 +1,8 @@
 package software.ulpgc.chess;
 
-public record Position(Board board, CastlingRights castlingRights, Square enPassantTarget) {
+public record Position(Board board, Color sideToMove, CastlingRights castlingRights, Square enPassantTarget) {
     public static Position initial(){
-        return new Position(Board.initial(), CastlingRights.initial(), null);
+        return new Position(Board.initial(), Color.White, CastlingRights.initial(), null);
     }
 
     public Position move(Square from, Square to){
@@ -10,6 +10,7 @@ public record Position(Board board, CastlingRights castlingRights, Square enPass
         Piece capturedPiece = board.pieceAt(to);
         return new Position(
                 board.move(from, to),
+                sideToMove.opposite(),
                 castlingRightsAfter(piece, capturedPiece, from, to),
                 enPassantTargetAfter(piece, from, to)
         );
