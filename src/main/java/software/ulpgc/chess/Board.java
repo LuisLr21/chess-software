@@ -2,24 +2,13 @@ package software.ulpgc.chess;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Board {
     private final Map<Square, Piece> pieces;
-    private final CastlingRights castlingRights;
-    private final Square enPassantTarget;
 
     public Board(Map<Square, Piece> pieces){
-        this(pieces, CastlingRights.initial(), null);
-    }
-
-    public Board(Map<Square, Piece> pieces, CastlingRights castlingRights){
-        this(pieces, castlingRights, null);
-    }
-
-    public Board(Map<Square, Piece> pieces, CastlingRights castlingRights, Square enPassantTarget){
         this.pieces = Map.copyOf(pieces);
-        this.castlingRights = castlingRights;
-        this.enPassantTarget = enPassantTarget;
     }
 
     public static Board initial() {
@@ -75,55 +64,33 @@ public final class Board {
         return pieces;
     }
 
-    public CastlingRights castlingRights() {
-        return castlingRights;
-    }
-
-    public Square enPassantTarget() {
-        return enPassantTarget;
-    }
-
     public int pieceCount() {
         return pieces.size();
     }
 
     public Board move(Square from, Square to){
-        Piece piece = pieces.get(from);
-        Piece capturedPiece = pieces.get(to);
-
         Map<Square, Piece> newPieces = new HashMap<>(pieces);
-        newPieces.remove(from);
+        Piece piece = newPieces.remove(from);
         newPieces.put(to, piece);
+        return new Board(newPieces);
+    }
 
-        CastlingRights newRights = castlingRights;
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Board board = (Board) o;
+        return Objects.equals(pieces, board.pieces);
+    }
 
-        if (piece == Piece.WhiteKing) newRights = newRights.withoutWhiteCastling();
-        if (piece == Piece.BlackKing) newRights = newRights.withoutBlackCastling();
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(pieces);
+    }
 
-        if (piece == Piece.WhiteRook){
-            if (from.equals(Square.at("a1"))) newRights = newRights.withoutWhiteQueenSide();
-            if (from.equals(Square.at("h1"))) newRights = newRights.withoutWhiteKingSide();
-        }
-        if (piece == Piece.BlackRook){
-            if (from.equals(Square.at("a8"))) newRights = newRights.withoutBlackQueenSide();
-            if (from.equals(Square.at("h8"))) newRights = newRights.withoutBlackKingSide();
-        }
-
-        if (capturedPiece == Piece.WhiteRook){
-            if (to.equals(Square.at("a1"))) newRights = newRights.withoutWhiteQueenSide();
-            if (to.equals(Square.at("h1"))) newRights = newRights.withoutWhiteKingSide();
-        }
-        if (capturedPiece == Piece.BlackRook){
-            if (to.equals(Square.at("a8"))) newRights = newRights.withoutBlackQueenSide();
-            if (to.equals(Square.at("h8"))) newRights = newRights.withoutBlackKingSide();
-        }
-
-        Square newEnPassantTarget = null;
-
-        if (piece != null && piece.type() == PieceType.Pawn && Math.abs(to.rank().value() - from.rank().value()) == 2){
-            int middleRankValue = (from.rank().value() + to.rank().value()) / 2;
-            newEnPassantTarget = new Square(from.file(), Rank.fromValue(middleRankValue));
-        }
-        return new Board(newPieces, newRights, newEnPassantTarget);
+    @Override
+    public String toString() {
+        return "Board{" +
+                "pieces=" + pieces +
+                '}';
     }
 }

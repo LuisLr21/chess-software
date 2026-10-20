@@ -1,0 +1,49 @@
+package software.ulpgc.chess;
+
+public record Position(Board board, CastlingRights castlingRights, Square enPassantTarget) {
+    public static Position initial(){
+        return new Position(Board.initial(), CastlingRights.initial(), null);
+    }
+
+    public Position move(Square from, Square to){
+        Piece piece = board.pieceAt(from);
+        Piece capturedPiece = board.pieceAt(to);
+        return new Position(
+                board.move(from, to),
+                castlingRightsAfter(piece, capturedPiece, from, to),
+                enPassantTargetAfter(piece, from, to)
+        );
+    }
+
+    private CastlingRights castlingRightsAfter(Piece piece, Piece capturedPiece, Square from, Square to){
+        CastlingRights rights = castlingRights;
+        if (piece == Piece.WhiteKing) rights = rights.withoutWhiteCastling();
+        if (piece == Piece.BlackKing) rights = rights.withoutBlackCastling();
+
+        if (piece == Piece.WhiteRook){
+            if (from.equals(Square.at("a1"))) rights = rights.withoutWhiteQueenSide();
+            if (from.equals(Square.at("h1"))) rights = rights.withoutWhiteKingSide();
+        }
+        if (piece == Piece.BlackRook){
+            if (from.equals(Square.at("a8"))) rights = rights.withoutBlackQueenSide();
+            if (from.equals(Square.at("h8"))) rights = rights.withoutBlackKingSide();
+        }
+
+        if (capturedPiece == Piece.WhiteRook){
+            if (to.equals(Square.at("a1"))) rights = rights.withoutWhiteQueenSide();
+            if (to.equals(Square.at("h1"))) rights = rights.withoutWhiteKingSide();
+        }
+        if (capturedPiece == Piece.BlackRook){
+            if (to.equals(Square.at("a8"))) rights = rights.withoutBlackQueenSide();
+            if (to.equals(Square.at("h8"))) rights = rights.withoutBlackKingSide();
+        }
+        return rights;
+    }
+
+    private Square enPassantTargetAfter(Piece piece, Square from, Square to){
+        if (piece == null || piece.type() != PieceType.Pawn) return null;
+        if (Math.abs(to.rank().value() - from.rank().value()) != 2) return null;
+        int middleRankValue = (from.rank().value() + to.rank().value()) / 2;
+        return new Square(from.file(), Rank.fromValue(middleRankValue));
+    }
+}
