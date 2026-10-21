@@ -1,12 +1,16 @@
 import { SYMBOLS } from "./PieceSymbols.js";
 import { PromotionDialog } from "./PromotionDialog.js";
 
+const FILES = "abcdefgh";
+
 export class BoardView {
     #container;
     #onSelect;
     #onMove;
     #selected = null;
-    #pieces = {};
+    #game = null;
+    #player = null;
+    #locked = false;
     #promotionDialog = new PromotionDialog();
 
     constructor(container, onSelect, onMove) {
@@ -16,18 +20,24 @@ export class BoardView {
         this.#container.addEventListener("click", event => this.#handleClick(event));
     }
 
-    render(game) {
-        this.#pieces = game.pieces;
+    render(game, { player = null, locked = false } = {}) {
+        this.#game = game;
+        this.#player = player;
+        this.#locked = locked;
+        this.#selected = null;
+        const flipped = player === "Black";
+        const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
+        const files = flipped ? [...FILES].reverse() : [...FILES];
         this.#container.innerHTML = "";
-        for (let rank = 8; rank >= 1; rank--) {
-            for (const file of "abcdefgh") {
+        for (const rank of ranks) {
+            for (const file of files) {
                 const square = file + rank;
                 const cell = document.createElement("div");
                 cell.classList.add("square", isLight(file, rank) ? "light" : "dark");
                 cell.dataset.square = square;
                 cell.textContent = SYMBOLS[game.pieces[square]] ?? "";
-                if (file === "a") cell.appendChild(label("rank-label", rank));
-                if (rank === 1) cell.appendChild(label("file-label", file));
+                if (file === files[0]) cell.appendChild(label("rank-label", rank));
+                if (rank === ranks[7]) cell.appendChild(label("file-label", file));
                 this.#container.appendChild(cell);
             }
         }
@@ -44,13 +54,13 @@ export class BoardView {
         if (!cell) return;
         const square = cell.dataset.square;
         if (this.#selected === null) {
-            if (!this.#pieces[square]) return;
-            this.#selected = square;
-            cell.classList.add("selected");
-            this.#onSelect(square);
+            if (this.#canSelect(square)) this.#select(square);
         } else if (this.#selected === square) {
             this.#selected = null;
             this.#clearHighlights();
+        } else if (this.#canSelect(square)) {
+            this.#clearHighlights();
+            this.#select(square);
         } else {
             const from = this.#selected;
             this.#selected = null;
@@ -63,8 +73,21 @@ export class BoardView {
         }
     }
 
+    #canSelect(square) {
+        const piece = this.#game.pieces[square];
+        if (!piece || this.#locked || this.#game.status !== "InProgress") return false;
+        const color = isWhite(piece) ? "White" : "Black";
+        return color === this.#game.sideToMove && (this.#player === null || this.#player === color);
+    }
+
+    #select(square) {
+        this.#selected = square;
+        this.#cell(square).classList.add("selected");
+        this.#onSelect(square);
+    }
+
     #isPromotion(from, to) {
-        const piece = this.#pieces[from];
+        const piece = this.#game.pieces[from];
         const lastRank = piece === "P" ? "8" : "1";
         return (piece === "P" || piece === "p")
             && to[1] === lastRank
@@ -72,7 +95,7 @@ export class BoardView {
     }
 
     #askPromotion(from) {
-        return this.#promotionDialog.ask(this.#pieces[from] === "P");
+        return this.#promotionDialog.ask(this.#game.pieces[from] === "P");
     }
 
     #clearHighlights() {
@@ -93,7 +116,10 @@ function label(className, text) {
     return span;
 }
 
+function isWhite(symbol) {
+    return symbol === symbol.toUpperCase();
+}
+
 function isLight(file, rank) {
-    const fileIndex = "abcdefgh".indexOf(file);
-    return (fileIndex + rank) % 2 === 0;
+    return (FILES.indexOf(file) + rank) % 2 === 0;
 }

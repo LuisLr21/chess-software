@@ -1,3 +1,34 @@
+[hidden] { display: none !important; }
+
+body { font-family: sans-serif; }
+
+#lobby {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 60px;
+}
+
+#join-form {
+    display: flex;
+    gap: 8px;
+}
+
+#room-code { text-transform: uppercase; }
+
+.lobby-error { color: #b00020; }
+
+#room-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.room-waiting { color: #8a6d00; }
+
 #board {
     display: grid;
     grid-template-columns: repeat(8, 64px);

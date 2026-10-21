@@ -6,8 +6,28 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div id="board"></div>
-    <p id="status"></p>
+    <section id="lobby" hidden>
+        <h1>Ajedrez</h1>
+        <button id="create-room">Crear sala</button>
+        <form id="join-form">
+            <input id="room-code" placeholder="Código de sala" maxlength="6" autocomplete="off">
+            <button type="submit">Unirse</button>
+        </form>
+        <button id="local-game">Partida local</button>
+        <p class="lobby-error"></p>
+    </section>
+
+    <main id="game" hidden>
+        <div id="room-info" hidden>
+            <span>Sala <strong class="room-code"></strong></span>
+            <span>Juegas con las <strong class="room-color"></strong></span>
+            <span class="room-waiting">Esperando rival… comparte el código</span>
+            <button id="leave-room">Salir</button>
+        </div>
+        <div id="board"></div>
+        <p id="status"></p>
+    </main>
+
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

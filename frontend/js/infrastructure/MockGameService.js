@@ -10,7 +10,8 @@ export class MockGameService extends GameService {
             sideToMove: "White",
             pieces: initialPieces(),
             status: "InProgress",
-            winner: null
+            winner: null,
+            moves: []
         };
         this.#games.set(game.id, game);
         return game;
@@ -36,6 +37,7 @@ export class MockGameService extends GameService {
 
         game.pieces[to] = promotion ? (isWhite(piece) ? promotion.toUpperCase() : promotion) : piece;
         delete game.pieces[from];
+        game.moves.push(from + to + (promotion ?? ""));
 
         game.sideToMove = game.sideToMove === "White" ? "Black" : "White";
 
