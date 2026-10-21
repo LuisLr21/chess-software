@@ -75,6 +75,12 @@ public final class Board {
         return new Board(newPieces);
     }
 
+    public Board put(Square square, Piece piece){
+        Map<Square, Piece> newPieces = new HashMap<>(pieces);
+        newPieces.put(square, piece);
+        return new Board(newPieces);
+    }
+
     public Board remove(Square square){
         Map<Square, Piece> newPieces = new HashMap<>(pieces);
         newPieces.remove(square);

@@ -1,20 +1,27 @@
 package software.ulpgc.chess.domain;
 
-public record Position(Board board, Color sideToMove, CastlingRights castlingRights, Square enPassantTarget) {
+public record Position(Board board, Color sideToMove, CastlingRights castlingRights, Square enPassantTarget, int halfMoveClock) {
     public static Position initial(){
-        return new Position(Board.initial(), Color.White, CastlingRights.initial(), null);
+        return new Position(Board.initial(), Color.White, CastlingRights.initial(), null, 0);
     }
 
     public Position move(Square from, Square to){
+        return move(from, to, PieceType.Queen);
+    }
+
+    public Position move(Square from, Square to, PieceType promotion){
         Piece piece = board.pieceAt(from);
         Piece capturedPiece = board.pieceAt(to);
         Board newBoard = board.move(from, to);
         if (isEnPassantCapture(piece, to)) newBoard = newBoard.remove(new Square(to.file(), from.rank()));
+        if (isCastling(piece, from, to)) newBoard = moveCastlingRook(newBoard, from, to);
+        if (isPromotion(piece, to)) newBoard = newBoard.put(to, Piece.of(piece.color(), promotion));
         return new Position(
                 newBoard,
                 sideToMove.opposite(),
                 castlingRightsAfter(piece, capturedPiece, from, to),
-                enPassantTargetAfter(piece, from, to)
+                enPassantTargetAfter(piece, from, to),
+                halfMoveClockAfter(piece, capturedPiece)
         );
     }
 
@@ -52,5 +59,27 @@ public record Position(Board board, Color sideToMove, CastlingRights castlingRig
 
     private boolean isEnPassantCapture(Piece piece, Square to) {
         return piece != null && piece.type() == PieceType.Pawn && to.equals(enPassantTarget);
+    }
+
+    private boolean isCastling(Piece piece, Square from, Square to) {
+        return piece != null && piece.type() == PieceType.King
+                && Math.abs(to.file().ordinal() - from.file().ordinal()) == 2;
+    }
+
+    private Board moveCastlingRook(Board board, Square from, Square to) {
+        boolean kingSide = to.file() == File.G;
+        Square rookFrom = new Square(kingSide ? File.H : File.A, from.rank());
+        Square rookTo = new Square(kingSide ? File.F : File.D, from.rank());
+        return board.move(rookFrom, rookTo);
+    }
+
+    private boolean isPromotion(Piece piece, Square to) {
+        return piece != null && piece.type() == PieceType.Pawn
+                && (to.rank() == Rank.R8 || to.rank() == Rank.R1);
+    }
+
+    private int halfMoveClockAfter(Piece piece, Piece capturedPiece) {
+        boolean isPawnMove = piece != null && piece.type() == PieceType.Pawn;
+        return isPawnMove || capturedPiece != null ? 0 : halfMoveClock + 1;
     }
 }

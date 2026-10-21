@@ -3,17 +3,10 @@ package software.ulpgc.chess.domain;
 import java.util.Map;
 
 public class CheckDetector {
-    private final MovementRule rules = new MovementRules();
+    private final AttackDetector attackDetector = new AttackDetector();
 
     public boolean isInCheck(Position position, Color color){
-        Square kingSquare = kingSquare(position.board(), color);
-        for (Map.Entry<Square, Piece> entry : position.board().pieces().entrySet()) {
-            if (entry.getValue().color() == color.opposite()
-                    && rules.canMove(position, entry.getKey(), kingSquare)) {
-                return true;
-            }
-        }
-        return false;
+        return attackDetector.isAttacked(position, kingSquare(position.board(), color), color.opposite());
     }
 
     private Square kingSquare(Board board, Color color) {
