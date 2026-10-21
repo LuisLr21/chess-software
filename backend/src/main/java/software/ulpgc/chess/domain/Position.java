@@ -25,6 +25,10 @@ public record Position(Board board, Color sideToMove, CastlingRights castlingRig
         );
     }
 
+    public boolean isPromotion(Square from, Square to) {
+        return isPromotion(board.pieceAt(from), to);
+    }
+
     private CastlingRights castlingRightsAfter(Piece piece, Piece capturedPiece, Square from, Square to){
         CastlingRights rights = castlingRights;
         if (piece == Piece.WhiteKing) rights = rights.withoutWhiteCastling();

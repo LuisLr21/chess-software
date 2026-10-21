@@ -2,11 +2,14 @@ package software.ulpgc.chess.infrastructure.http;
 
 import software.ulpgc.chess.domain.Color;
 import software.ulpgc.chess.domain.Game;
+import software.ulpgc.chess.domain.Move;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public record GameResponse(String id, String sideToMove, Map<String, String> pieces, String status, String winner) {
+public record GameResponse(String id, String sideToMove, Map<String, String> pieces, String status, String winner,
+                           List<String> moves) {
     public static GameResponse from(Game game){
         Map<String, String> pieces = new HashMap<>();
         game.position().board().pieces()
@@ -17,7 +20,8 @@ public record GameResponse(String id, String sideToMove, Map<String, String> pie
                 game.position().sideToMove().name(),
                 pieces,
                 game.status().name(),
-                winner == null ? null : winner.name()
+                winner == null ? null : winner.name(),
+                game.history().stream().map(Move::toString).toList()
         );
     }
 }
