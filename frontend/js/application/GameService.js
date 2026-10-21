@@ -7,7 +7,7 @@ export class GameService {
         throw new Error("Not implemented");
     }
 
-    async move(id, from, to) {
+    async move(id, from, to, promotion) {
         throw new Error("Not implemented");
     }
 

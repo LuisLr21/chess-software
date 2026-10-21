@@ -1,13 +1,13 @@
-const SYMBOLS = {
-    K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙",
-    k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟"
-};
+import { SYMBOLS } from "./PieceSymbols.js";
+import { PromotionDialog } from "./PromotionDialog.js";
 
 export class BoardView {
     #container;
     #onSelect;
     #onMove;
     #selected = null;
+    #pieces = {};
+    #promotionDialog = new PromotionDialog();
 
     constructor(container, onSelect, onMove) {
         this.#container = container;
@@ -17,6 +17,7 @@ export class BoardView {
     }
 
     render(game) {
+        this.#pieces = game.pieces;
         this.#container.innerHTML = "";
         for (let rank = 8; rank >= 1; rank--) {
             for (const file of "abcdefgh") {
@@ -36,7 +37,7 @@ export class BoardView {
         }
     }
 
-    #handleClick(event) {
+    async #handleClick(event) {
         const square = event.target.dataset.square;
         if (!square) return;
         if (this.#selected === null) {
@@ -50,8 +51,25 @@ export class BoardView {
         } else {
             const from = this.#selected;
             this.#selected = null;
-            this.#onMove(from, square);
+            const promotion = this.#isPromotion(from, square) ? await this.#askPromotion(from) : undefined;
+            if (promotion === null) {
+                this.#clearHighlights();
+                return;
+            }
+            this.#onMove(from, square, promotion);
         }
+    }
+
+    #isPromotion(from, to) {
+        const piece = this.#pieces[from];
+        const lastRank = piece === "P" ? "8" : "1";
+        return (piece === "P" || piece === "p")
+            && to[1] === lastRank
+            && this.#cell(to).classList.contains("hint");
+    }
+
+    #askPromotion(from) {
+        return this.#promotionDialog.ask(this.#pieces[from] === "P");
     }
 
     #clearHighlights() {

@@ -16,8 +16,8 @@ export class HttpGameService extends GameService {
         return this.#request("GET", `/games/${id}`);
     }
 
-    async move(id, from, to) {
-        return this.#request("POST", `/games/${id}/moves`, { from, to });
+    async move(id, from, to, promotion) {
+        return this.#request("POST", `/games/${id}/moves`, { from, to, promotion });
     }
 
     async legalMoves(id, from) {

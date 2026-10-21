@@ -8,7 +8,9 @@ export class MockGameService extends GameService {
         const game = {
             id: String(this.#nextId++),
             sideToMove: "White",
-            pieces: initialPieces()
+            pieces: initialPieces(),
+            status: "InProgress",
+            winner: null
         };
         this.#games.set(game.id, game);
         return game;
@@ -24,14 +26,15 @@ export class MockGameService extends GameService {
         return game;
     }
 
-    async move(id, from, to) {
+    async move(id, from, to, promotion) {
         const game = await this.getGame(id);
+        const piece = game.pieces[from];
 
-        if (!game.pieces[from]) {
+        if (!piece) {
             throw new Error("No piece at the source square");
         }
 
-        game.pieces[to] = game.pieces[from];
+        game.pieces[to] = promotion ? (isWhite(piece) ? promotion.toUpperCase() : promotion) : piece;
         delete game.pieces[from];
 
         game.sideToMove = game.sideToMove === "White" ? "Black" : "White";
