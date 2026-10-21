@@ -31,6 +31,26 @@
     pointer-events: none;
 }
 
+.rank-label,
+.file-label {
+    position: absolute;
+    font: bold 16px sans-serif;
+    color: #333;
+    pointer-events: none;
+}
+
+.rank-label {
+    left: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.file-label {
+    bottom: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 #status {
     text-align: center;
     font: bold 20px sans-serif;

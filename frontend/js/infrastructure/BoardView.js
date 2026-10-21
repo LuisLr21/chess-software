@@ -26,6 +26,8 @@ export class BoardView {
                 cell.classList.add("square", isLight(file, rank) ? "light" : "dark");
                 cell.dataset.square = square;
                 cell.textContent = SYMBOLS[game.pieces[square]] ?? "";
+                if (file === "a") cell.appendChild(label("rank-label", rank));
+                if (rank === 1) cell.appendChild(label("file-label", file));
                 this.#container.appendChild(cell);
             }
         }
@@ -38,12 +40,13 @@ export class BoardView {
     }
 
     async #handleClick(event) {
-        const square = event.target.dataset.square;
-        if (!square) return;
+        const cell = event.target.closest(".square");
+        if (!cell) return;
+        const square = cell.dataset.square;
         if (this.#selected === null) {
-            if (event.target.textContent === "") return;
+            if (!this.#pieces[square]) return;
             this.#selected = square;
-            event.target.classList.add("selected");
+            cell.classList.add("selected");
             this.#onSelect(square);
         } else if (this.#selected === square) {
             this.#selected = null;
@@ -81,6 +84,13 @@ export class BoardView {
     #cell(square) {
         return this.#container.querySelector(`[data-square="${square}"]`);
     }
+}
+
+function label(className, text) {
+    const span = document.createElement("span");
+    span.classList.add(className);
+    span.textContent = text;
+    return span;
 }
 
 function isLight(file, rank) {
