@@ -1,7 +1,7 @@
-import { MockGameService } from "./infrastructure/MockGameService.js";
 import { BoardView } from "./infrastructure/BoardView.js";
+import { HttpGameService } from "./infrastructure/HttpGameService.js";
 
-const service = new MockGameService();
+const service = new HttpGameService("http://localhost:7070");
 const view = new BoardView(
     document.getElementById("board"),
     async from => view.showHints(await service.legalMoves(game.id, from)),

@@ -7,7 +7,7 @@ export class MockGameService extends GameService {
     async createGame() {
         const game = {
             id: String(this.#nextId++),
-            sideToMove: "WHITE",
+            sideToMove: "White",
             pieces: initialPieces()
         };
         this.#games.set(game.id, game);
@@ -34,7 +34,7 @@ export class MockGameService extends GameService {
         game.pieces[to] = game.pieces[from];
         delete game.pieces[from];
 
-        game.sideToMove = game.sideToMove === "WHITE" ? "BLACK" : "WHITE";
+        game.sideToMove = game.sideToMove === "White" ? "Black" : "White";
 
         return game;
     }
