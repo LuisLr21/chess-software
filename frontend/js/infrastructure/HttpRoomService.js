@@ -13,34 +13,65 @@ export class HttpRoomService extends RoomService {
         this.#socketUrl = baseUrl.replace(/^http/, "ws");
     }
 
-    async createRoom() {
-        return request(this.#baseUrl, "POST", "/rooms");
+    async createRoom(name, minutes) {
+        return request(this.#baseUrl, "POST", "/rooms", { name, minutes });
     }
 
-    async joinRoom(code) {
-        return request(this.#baseUrl, "POST", `/rooms/${code}/players`);
+    async joinRoom(code, name) {
+        return request(this.#baseUrl, "POST", `/rooms/${code}/players`, { name });
     }
 
-    async getRoom(code) {
-        return request(this.#baseUrl, "GET", `/rooms/${code}`);
+    async getRoom(code, playerToken) {
+        return request(this.#baseUrl, "GET", `/rooms/${code}`, undefined, tokenHeader(playerToken));
     }
 
     async move(code, playerToken, from, to, promotion) {
-        return request(this.#baseUrl, "POST", `/rooms/${code}/moves`, { from, to, promotion },
-            { "X-Player-Token": playerToken });
+        return request(this.#baseUrl, "POST", `/rooms/${code}/moves`, { from, to, promotion }, tokenHeader(playerToken));
     }
 
     async legalMoves(gameId, from) {
         return request(this.#baseUrl, "GET", `/games/${gameId}/moves?from=${from}`);
     }
 
-    subscribe(code, listener) {
+    async resign(code, playerToken) {
+        return request(this.#baseUrl, "POST", `/rooms/${code}/resign`, undefined, tokenHeader(playerToken));
+    }
+
+    async offerDraw(code, playerToken) {
+        return request(this.#baseUrl, "POST", `/rooms/${code}/draw-offer`, undefined, tokenHeader(playerToken));
+    }
+
+    async declineDraw(code, playerToken) {
+        return request(this.#baseUrl, "DELETE", `/rooms/${code}/draw-offer`, undefined, tokenHeader(playerToken));
+    }
+
+    async rematch(code, playerToken) {
+        return request(this.#baseUrl, "POST", `/rooms/${code}/rematch`, undefined, tokenHeader(playerToken));
+    }
+
+    async messages(code) {
+        return request(this.#baseUrl, "GET", `/rooms/${code}/messages`);
+    }
+
+    async sendMessage(code, playerToken, text) {
+        return request(this.#baseUrl, "POST", `/rooms/${code}/messages`, { text }, tokenHeader(playerToken));
+    }
+
+    subscribe(code, playerToken, { onRoom, onPresence, onChat }) {
         let socket;
         let active = true;
+        const handlers = {
+            room: event => onRoom(event.room),
+            presence: event => onPresence({ white: event.white, black: event.black }),
+            chat: event => onChat(event.message)
+        };
         const connect = () => {
-            socket = new WebSocket(`${this.#socketUrl}/rooms/${code}/events`);
-            socket.addEventListener("open", () => this.getRoom(code).then(listener).catch(() => {}));
-            socket.addEventListener("message", event => listener(JSON.parse(event.data)));
+            socket = new WebSocket(`${this.#socketUrl}/rooms/${code}/events?token=${encodeURIComponent(playerToken)}`);
+            socket.addEventListener("open", () => this.getRoom(code, playerToken).then(onRoom).catch(() => {}));
+            socket.addEventListener("message", message => {
+                const event = JSON.parse(message.data);
+                handlers[event.type]?.(event);
+            });
             socket.addEventListener("close", () => {
                 if (active) setTimeout(connect, RECONNECT_DELAY_MS);
             });
@@ -51,4 +82,8 @@ export class HttpRoomService extends RoomService {
             socket.close();
         };
     }
+}
+
+function tokenHeader(playerToken) {
+    return playerToken ? { "X-Player-Token": playerToken } : {};
 }

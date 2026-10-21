@@ -11,7 +11,10 @@ export class MockGameService extends GameService {
             pieces: initialPieces(),
             status: "InProgress",
             winner: null,
-            moves: []
+            inCheck: false,
+            moves: [],
+            san: [],
+            captured: { White: [], Black: [] }
         };
         this.#games.set(game.id, game);
         return game;
@@ -35,9 +38,11 @@ export class MockGameService extends GameService {
             throw new Error("No piece at the source square");
         }
 
+        if (game.pieces[to]) game.captured[game.sideToMove].push(game.pieces[to]);
         game.pieces[to] = promotion ? (isWhite(piece) ? promotion.toUpperCase() : promotion) : piece;
         delete game.pieces[from];
         game.moves.push(from + to + (promotion ?? ""));
+        game.san.push(to);
 
         game.sideToMove = game.sideToMove === "White" ? "Black" : "White";
 

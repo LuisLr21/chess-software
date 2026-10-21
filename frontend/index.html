@@ -2,30 +2,157 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Chess</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajedrez 16-bit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <section id="lobby" hidden>
-        <h1>Ajedrez</h1>
-        <button id="create-room">Crear sala</button>
-        <form id="join-form">
-            <input id="room-code" placeholder="Código de sala" maxlength="6" autocomplete="off">
-            <button type="submit">Unirse</button>
-        </form>
-        <button id="local-game">Partida local</button>
-        <p class="lobby-error"></p>
+    <section id="lobby" class="lobby" hidden>
+        <div class="pixel-card lobby-card">
+            <div class="lobby-pieces"></div>
+            <h1 class="lobby-title">AJEDREZ <span>16-BIT</span></h1>
+            <p class="lobby-subtitle">ULPGC · INGENIERIA DEL SOFTWARE II</p>
+
+            <label class="field">
+                <span class="field-label">TU NOMBRE</span>
+                <input id="player-name" class="pixel-input" maxlength="16" placeholder="Jugador" autocomplete="off">
+            </label>
+
+            <div class="field">
+                <span class="field-label">MODO</span>
+                <div class="choice-row" id="mode-choice">
+                    <button class="pixel-btn choice" data-mode="online">MULTIJUGADOR</button>
+                    <button class="pixel-btn choice" data-mode="ai" disabled>VS IA <small>PROXIMAMENTE</small></button>
+                    <button class="pixel-btn choice" data-mode="local">LOCAL</button>
+                </div>
+            </div>
+
+            <div class="lobby-online" data-for="online">
+                <div class="field">
+                    <span class="field-label">TIEMPO POR JUGADOR</span>
+                    <div class="choice-row" id="time-choice">
+                        <button class="pixel-btn choice" data-minutes="0">SIN</button>
+                        <button class="pixel-btn choice" data-minutes="3">3'</button>
+                        <button class="pixel-btn choice" data-minutes="5">5'</button>
+                        <button class="pixel-btn choice" data-minutes="10">10'</button>
+                        <button class="pixel-btn choice" data-minutes="15">15'</button>
+                    </div>
+                </div>
+                <button id="create-room" class="pixel-btn pixel-btn-big">CREAR SALA</button>
+                <form id="join-form" class="join-form">
+                    <input id="room-code" class="pixel-input" placeholder="CÓDIGO" maxlength="6" autocomplete="off">
+                    <button type="submit" class="pixel-btn">UNIRSE</button>
+                </form>
+            </div>
+
+            <div class="lobby-local" data-for="local" hidden>
+                <p class="lobby-hint">Dos jugadores en el mismo ordenador, por turnos.</p>
+                <button id="local-game" class="pixel-btn pixel-btn-big">EMPEZAR PARTIDA</button>
+            </div>
+
+            <p class="lobby-error"></p>
+        </div>
     </section>
 
-    <main id="game" hidden>
-        <div id="room-info" hidden>
-            <span>Sala <strong class="room-code"></strong></span>
-            <span>Juegas con las <strong class="room-color"></strong></span>
-            <span class="room-waiting">Esperando rival… comparte el código</span>
-            <button id="leave-room">Salir</button>
-        </div>
-        <div id="board"></div>
-        <p id="status"></p>
+    <main id="game" class="game" hidden>
+        <aside class="column">
+            <section class="pixel-card" id="players">
+                <h2 class="card-title"><span class="blink">MATCH STATS</span><span class="accent-cyan">16-BIT CLASSIC</span></h2>
+                <div class="player" data-color="White">
+                    <div class="player-avatar"></div>
+                    <div class="player-info">
+                        <div class="player-name"></div>
+                        <div class="player-presence"></div>
+                    </div>
+                    <span class="tag tag-white">WHITE</span>
+                </div>
+                <div class="player" data-color="Black">
+                    <div class="player-avatar"></div>
+                    <div class="player-info">
+                        <div class="player-name"></div>
+                        <div class="player-presence"></div>
+                    </div>
+                    <span class="tag tag-black">BLACK</span>
+                </div>
+            </section>
+
+            <section class="pixel-card grow" id="options">
+                <h2 class="card-title"><span>GAME OPTIONS</span><span class="muted">[MENU]</span></h2>
+                <div class="option-rows">
+                    <div class="option-row"><span>MODO:</span><span class="option-mode accent-cyan"></span></div>
+                    <div class="option-row"><span>TIEMPO:</span><span class="option-time accent-gold"></span></div>
+                    <div class="option-row"><span>SONIDO:</span><span class="option-sound"></span></div>
+                </div>
+                <div class="option-buttons">
+                    <button class="pixel-btn" data-action="rematch">REVANCHA</button>
+                    <button class="pixel-btn" data-action="new-game">NUEVA PARTIDA</button>
+                    <button class="pixel-btn" data-action="draw">PEDIR TABLAS</button>
+                    <button class="pixel-btn pixel-btn-danger" data-action="resign">RENDIRSE</button>
+                    <button class="pixel-btn pixel-btn-small" data-action="mute">MUTE / UNMUTE</button>
+                    <button class="pixel-btn pixel-btn-small" data-action="leave">SALIR</button>
+                </div>
+            </section>
+
+            <section class="pixel-card" id="graveyard">
+                <h2 class="card-title"><span>GRAVEYARD</span><span class="material accent-green"></span></h2>
+                <div class="captures-box">
+                    <span class="captures-label accent-gold">CAPTURADAS POR BLANCAS:</span>
+                    <div class="captures" data-color="White"></div>
+                </div>
+                <div class="captures-box">
+                    <span class="captures-label accent-pink">CAPTURADAS POR NEGRAS:</span>
+                    <div class="captures" data-color="Black"></div>
+                </div>
+            </section>
+        </aside>
+
+        <section class="column center">
+            <div class="pixel-card pixel-card-gold room-bar" id="room-bar">
+                <div class="room-bar-label"><span class="ping"></span><span class="room-bar-title"></span></div>
+                <span class="room-code"></span>
+                <button class="pixel-btn" data-action="copy">COPIAR</button>
+            </div>
+            <div class="board-area">
+                <div class="board-frame">
+                    <div id="board" class="board"></div>
+                </div>
+            </div>
+            <div class="pixel-card turn-banner" id="turn-banner">
+                <span class="turn-icon"></span>
+                <span class="turn-text"></span>
+                <span class="turn-actions"></span>
+            </div>
+        </section>
+
+        <aside class="column">
+            <section class="pixel-card" id="clocks">
+                <h2 class="card-title centered accent-cyan">CONTROL DE TIEMPO</h2>
+                <div class="clock-grid">
+                    <div class="clock" data-color="White"><span class="clock-label">BLANCAS</span><span class="clock-time">--:--</span></div>
+                    <div class="clock" data-color="Black"><span class="clock-label">NEGRAS</span><span class="clock-time">--:--</span></div>
+                </div>
+            </section>
+
+            <section class="pixel-card grow" id="history">
+                <h2 class="card-title"><span class="accent-cyan">HISTORIAL</span><button class="link-btn" data-action="pgn" title="Descargar PGN">PGN</button></h2>
+                <div class="history-list">
+                    <div class="history-head"><span>#</span><span>BLANCAS</span><span>NEGRAS</span></div>
+                    <ol class="history-moves"></ol>
+                </div>
+            </section>
+
+            <section class="pixel-card" id="chat">
+                <h2 class="card-title">CHAT DE JUGADORES</h2>
+                <div class="chat-messages"></div>
+                <form class="chat-form">
+                    <input class="pixel-input chat-input" maxlength="200" placeholder="Escribir mensaje..." autocomplete="off">
+                    <button type="submit" class="pixel-btn">ENVIAR</button>
+                </form>
+            </section>
+        </aside>
     </main>
 
     <script type="module" src="js/main.js"></script>

@@ -1,13 +1,13 @@
 export class RoomService {
-    async createRoom() {
+    async createRoom(name, minutes) {
         throw new Error("Not implemented");
     }
 
-    async joinRoom(code) {
+    async joinRoom(code, name) {
         throw new Error("Not implemented");
     }
 
-    async getRoom(code) {
+    async getRoom(code, playerToken) {
         throw new Error("Not implemented");
     }
 
@@ -19,7 +19,31 @@ export class RoomService {
         throw new Error("Not implemented");
     }
 
-    subscribe(code, listener) {
+    async resign(code, playerToken) {
+        throw new Error("Not implemented");
+    }
+
+    async offerDraw(code, playerToken) {
+        throw new Error("Not implemented");
+    }
+
+    async declineDraw(code, playerToken) {
+        throw new Error("Not implemented");
+    }
+
+    async rematch(code, playerToken) {
+        throw new Error("Not implemented");
+    }
+
+    async messages(code) {
+        throw new Error("Not implemented");
+    }
+
+    async sendMessage(code, playerToken, text) {
+        throw new Error("Not implemented");
+    }
+
+    subscribe(code, playerToken, { onRoom, onPresence, onChat }) {
         throw new Error("Not implemented");
     }
 }

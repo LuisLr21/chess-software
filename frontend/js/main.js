@@ -1,10 +1,9 @@
 import { LocalGame } from "./application/LocalGame.js";
 import { OnlineGame } from "./application/OnlineGame.js";
-import { BoardView } from "./infrastructure/BoardView.js";
-import { StatusView } from "./infrastructure/StatusView.js";
+import { GameScreen } from "./infrastructure/GameScreen.js";
 import { LobbyView } from "./infrastructure/LobbyView.js";
-import { RoomInfoView } from "./infrastructure/RoomInfoView.js";
 import { BrowserSessionStore } from "./infrastructure/BrowserSessionStore.js";
+import { BrowserPreferences } from "./infrastructure/BrowserPreferences.js";
 import { HttpGameService } from "./infrastructure/HttpGameService.js";
 import { HttpRoomService } from "./infrastructure/HttpRoomService.js";
 import { MockGameService } from "./infrastructure/MockGameService.js";
@@ -15,21 +14,28 @@ const API_URL = "http://localhost:7070";
 
 const gameService = USE_MOCK ? new MockGameService() : new HttpGameService(API_URL);
 const roomService = USE_MOCK ? new MockRoomService() : new HttpRoomService(API_URL);
+const preferences = new BrowserPreferences();
 
 const gameArea = document.getElementById("game");
 let controller = null;
-const board = new BoardView(
-    document.getElementById("board"),
-    square => controller.select(square),
-    (from, to, promotion) => controller.move(from, to, promotion)
-);
-const status = new StatusView(document.getElementById("status"));
-const roomInfo = new RoomInfoView(document.getElementById("room-info"), leaveRoom);
-const local = new LocalGame(gameService, board, status);
-const online = new OnlineGame(roomService, board, status, roomInfo, new BrowserSessionStore());
-const lobby = new LobbyView(document.getElementById("lobby"), {
-    onCreate: () => enter(online, () => online.create()),
-    onJoin: code => enter(online, () => online.join(code)),
+
+const screen = new GameScreen(gameArea, preferences, {
+    onSelect: square => controller.select(square),
+    onMove: (from, to, promotion) => controller.move(from, to, promotion),
+    onResign: () => online.resign(),
+    onDraw: () => online.offerDraw(),
+    onDeclineDraw: () => online.declineDraw(),
+    onRematch: () => online.rematch(),
+    onSendMessage: text => online.sendMessage(text),
+    onTimeUp: () => online.refresh(),
+    onNewGame: () => local.start(),
+    onLeave: leave
+});
+const local = new LocalGame(gameService, screen);
+const online = new OnlineGame(roomService, screen, new BrowserSessionStore());
+const lobby = new LobbyView(document.getElementById("lobby"), preferences, {
+    onCreate: (name, minutes) => enter(online, () => online.create(name, minutes)),
+    onJoin: (code, name) => enter(online, () => online.join(code, name)),
     onLocal: () => enter(local, () => local.start())
 });
 
@@ -40,13 +46,13 @@ async function enter(game, start) {
         lobby.hide();
         gameArea.hidden = false;
     } catch (error) {
-        lobby.showError(error.message);
+        lobby.showError(error);
     }
 }
 
-function leaveRoom() {
-    online.leave();
-    roomInfo.hide();
+function leave() {
+    controller.leave();
+    screen.reset();
     gameArea.hidden = true;
     lobby.show();
 }

@@ -1,4 +1,4 @@
-import { SYMBOLS } from "./PieceSymbols.js";
+import { pieceSvg } from "./PixelPieces.js";
 import { PromotionDialog } from "./PromotionDialog.js";
 
 const FILES = "abcdefgh";
@@ -11,6 +11,7 @@ export class BoardView {
     #game = null;
     #player = null;
     #locked = false;
+    #renderedKey = null;
     #promotionDialog = new PromotionDialog();
 
     constructor(container, onSelect, onMove) {
@@ -21,21 +22,30 @@ export class BoardView {
     }
 
     render(game, { player = null, locked = false } = {}) {
+        const key = [game.id, game.moves.length, game.status, player, locked].join("|");
         this.#game = game;
+        if (key === this.#renderedKey) return;
+        this.#renderedKey = key;
         this.#player = player;
         this.#locked = locked;
         this.#selected = null;
         const flipped = player === "Black";
         const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
         const files = flipped ? [...FILES].reverse() : [...FILES];
+        const lastMove = game.moves.at(-1);
+        const lastSquares = lastMove ? [lastMove.slice(0, 2), lastMove.slice(2, 4)] : [];
+        const checkedKing = game.inCheck ? (game.sideToMove === "White" ? "K" : "k") : null;
         this.#container.innerHTML = "";
         for (const rank of ranks) {
             for (const file of files) {
                 const square = file + rank;
+                const piece = game.pieces[square];
                 const cell = document.createElement("div");
                 cell.classList.add("square", isLight(file, rank) ? "light" : "dark");
+                if (lastSquares.includes(square)) cell.classList.add("last-move");
+                if (piece && piece === checkedKing) cell.classList.add("in-check");
                 cell.dataset.square = square;
-                cell.textContent = SYMBOLS[game.pieces[square]] ?? "";
+                if (piece) cell.innerHTML = pieceSvg(piece);
                 if (file === files[0]) cell.appendChild(label("rank-label", rank));
                 if (rank === ranks[7]) cell.appendChild(label("file-label", file));
                 this.#container.appendChild(cell);
@@ -45,7 +55,9 @@ export class BoardView {
 
     showHints(squares) {
         for (const square of squares) {
-            this.#cell(square).classList.add("hint");
+            const cell = this.#cell(square);
+            cell.classList.add("hint");
+            if (this.#game.pieces[square]) cell.classList.add("capture");
         }
     }
 
@@ -61,15 +73,16 @@ export class BoardView {
         } else if (this.#canSelect(square)) {
             this.#clearHighlights();
             this.#select(square);
-        } else {
+        } else if (cell.classList.contains("hint")) {
             const from = this.#selected;
             this.#selected = null;
             const promotion = this.#isPromotion(from, square) ? await this.#askPromotion(from) : undefined;
-            if (promotion === null) {
-                this.#clearHighlights();
-                return;
-            }
+            this.#clearHighlights();
+            if (promotion === null) return;
             this.#onMove(from, square, promotion);
+        } else {
+            this.#selected = null;
+            this.#clearHighlights();
         }
     }
 
@@ -89,9 +102,7 @@ export class BoardView {
     #isPromotion(from, to) {
         const piece = this.#game.pieces[from];
         const lastRank = piece === "P" ? "8" : "1";
-        return (piece === "P" || piece === "p")
-            && to[1] === lastRank
-            && this.#cell(to).classList.contains("hint");
+        return (piece === "P" || piece === "p") && to[1] === lastRank;
     }
 
     #askPromotion(from) {
@@ -100,7 +111,7 @@ export class BoardView {
 
     #clearHighlights() {
         for (const cell of this.#container.querySelectorAll(".selected, .hint")) {
-            cell.classList.remove("selected", "hint");
+            cell.classList.remove("selected", "hint", "capture");
         }
     }
 

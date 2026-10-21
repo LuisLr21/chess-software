@@ -1,4 +1,4 @@
-import { SYMBOLS } from "./PieceSymbols.js";
+import { pieceSvg } from "./PixelPieces.js";
 
 const CHOICES = ["q", "r", "b", "n"];
 
@@ -7,16 +7,17 @@ export class PromotionDialog {
 
     constructor() {
         this.#dialog = document.createElement("dialog");
-        this.#dialog.classList.add("promotion");
+        this.#dialog.classList.add("promotion", "pixel-card", "pixel-card-gold");
         document.body.appendChild(this.#dialog);
     }
 
     ask(white) {
         return new Promise(resolve => {
-            this.#dialog.innerHTML = "";
+            this.#dialog.innerHTML = "<p>CORONAR:</p>";
             for (const choice of CHOICES) {
                 const button = document.createElement("button");
-                button.textContent = SYMBOLS[white ? choice.toUpperCase() : choice];
+                button.classList.add("pixel-btn");
+                button.innerHTML = pieceSvg(white ? choice.toUpperCase() : choice);
                 button.addEventListener("click", () => {
                     this.#dialog.close();
                     resolve(choice);
