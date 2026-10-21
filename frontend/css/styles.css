@@ -1,0 +1,32 @@
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 64px);
+    grid-template-rows: repeat(8, 64px);
+    width: fit-content;
+    margin: 40px auto;
+    border: 2px solid #333;
+}
+
+.square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.light { background: #f0d9b5; }
+.dark { background: #b58863; }
+.selected { box-shadow: inset 0 0 0 4px #4a90d9; }
+
+.hint::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
