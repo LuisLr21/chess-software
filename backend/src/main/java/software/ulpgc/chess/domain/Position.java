@@ -29,6 +29,16 @@ public record Position(Board board, Color sideToMove, CastlingRights castlingRig
         return isPromotion(board.pieceAt(from), to);
     }
 
+    public boolean isCastling(Square from, Square to) {
+        return isCastling(board.pieceAt(from), from, to);
+    }
+
+    public Piece capturedPiece(Square from, Square to) {
+        Piece piece = board.pieceAt(from);
+        if (isEnPassantCapture(piece, to)) return board.pieceAt(new Square(to.file(), from.rank()));
+        return board.pieceAt(to);
+    }
+
     private CastlingRights castlingRightsAfter(Piece piece, Piece capturedPiece, Square from, Square to){
         CastlingRights rights = castlingRights;
         if (piece == Piece.WhiteKing) rights = rights.withoutWhiteCastling();
