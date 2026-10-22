@@ -10,7 +10,7 @@ import { MockGameService } from "./infrastructure/MockGameService.js";
 import { MockRoomService } from "./infrastructure/MockRoomService.js";
 
 const USE_MOCK = false;
-const API_URL = "http://localhost:7070";
+const API_URL = location.origin;
 
 const gameService = USE_MOCK ? new MockGameService() : new HttpGameService(API_URL);
 const roomService = USE_MOCK ? new MockRoomService() : new HttpRoomService(API_URL);

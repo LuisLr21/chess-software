@@ -1,7 +1,7 @@
 package software.ulpgc.chess.infrastructure;
 
 import io.javalin.Javalin;
-import io.javalin.plugin.bundled.CorsPluginConfig;
+import io.javalin.http.staticfiles.Location;
 import software.ulpgc.chess.application.ChatRepository;
 import software.ulpgc.chess.application.CreateGameUseCase;
 import software.ulpgc.chess.application.CreateRoomUseCase;
@@ -72,11 +72,16 @@ public class Main {
         );
 
         Javalin app = Javalin.create(config -> {
-            config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/";
+                staticFiles.directory = System.getenv().getOrDefault("FRONTEND", "frontend");
+                staticFiles.location = Location.EXTERNAL;
+            });
             gameController.register(config.routes);
             roomController.register(config.routes);
             notifier.register(config.routes);
         });
+
 
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "7070"));
         app.start(port);

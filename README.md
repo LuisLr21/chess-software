@@ -101,14 +101,13 @@ main.js           Raíz de composición: elige los adaptadores y los conecta.
 
 Requisitos: JDK 27 y Maven, o IntelliJ IDEA, que trae Maven integrado.
 
-**1. Backend** (puerto 7070):
-
-Ejecuta `software.ulpgc.chess.infrastructure.Main` desde IntelliJ, o bien:
+El backend sirve también el frontend, así que basta con arrancar un único proceso **desde la raíz del repositorio**. Ejecuta `software.ulpgc.chess.infrastructure.Main` desde IntelliJ, o bien:
 
 ```
-cd backend
-mvn compile exec:java -Dexec.mainClass=software.ulpgc.chess.infrastructure.Main
+mvn -f backend/pom.xml compile exec:java -Dexec.mainClass=software.ulpgc.chess.infrastructure.Main
 ```
+
+Abre http://localhost:7070.
 
 Variables de entorno opcionales:
 
@@ -117,15 +116,9 @@ Variables de entorno opcionales:
 | `PORT` | `7070` | Puerto del servidor |
 | `STORAGE` | (SQLite) | `memory` para no guardar nada en disco |
 | `DATABASE` | `chess.db` | Ruta del archivo SQLite (relativa al directorio de trabajo) |
+| `FRONTEND` | `frontend` | Carpeta del frontend que sirve Javalin (relativa al directorio de trabajo) |
 
-**2. Frontend** (puerto 8000). Los módulos ES no funcionan abriendo el HTML con doble clic (`file://`), así que hay que servirlo por HTTP. El JDK incluye `jwebserver`:
-
-```
-cd frontend
-jwebserver
-```
-
-Abre http://localhost:8000.
+Javalin sirve los ficheros del frontend con `config.staticFiles` (`Location.EXTERNAL`). La página y la API comparten origen, así que no hace falta CORS y el frontend usa `location.origin` como URL de la API. Los módulos ES no funcionan abriendo el HTML con doble clic (`file://`); siempre hay que entrar por http://localhost:7070.
 
 **Para probar una sala tú solo**, abre dos pestañas. En una elige *Multijugador*, el tiempo y pulsa *Crear sala*. En la otra escribe el código y pulsa *Unirse*. La sesión se guarda por pestaña (`sessionStorage`), así que cada pestaña es un jugador distinto y recargar no te saca de la sala.
 
