@@ -13,6 +13,10 @@ export class LocalGame {
         this.#screen.showMessages([]);
     }
 
+    async restart() {
+        await this.start();
+    }
+
     async select(square) {
         this.#screen.showHints(await this.#service.legalMoves(this.#game.id, square));
     }

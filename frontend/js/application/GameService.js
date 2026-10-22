@@ -14,4 +14,12 @@ export class GameService {
     async legalMoves(id, from) {
         throw new Error("Not implemented");
     }
+
+    async aiMove(id, level) {
+        throw new Error("Not implemented");
+    }
+
+    async aiLevels() {
+        throw new Error("Not implemented");
+    }
 }

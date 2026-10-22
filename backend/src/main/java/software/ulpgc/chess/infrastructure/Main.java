@@ -7,6 +7,7 @@ import software.ulpgc.chess.application.CreateGameUseCase;
 import software.ulpgc.chess.application.CreateRoomUseCase;
 import software.ulpgc.chess.application.DeclineDrawUseCase;
 import software.ulpgc.chess.application.GameRepository;
+import software.ulpgc.chess.application.GetAiLevelsUseCase;
 import software.ulpgc.chess.application.GetGameUseCase;
 import software.ulpgc.chess.application.GetLegalMovesUseCase;
 import software.ulpgc.chess.application.GetMessagesUseCase;
@@ -15,10 +16,12 @@ import software.ulpgc.chess.application.JoinRoomUseCase;
 import software.ulpgc.chess.application.MoveInRoomUseCase;
 import software.ulpgc.chess.application.MovePieceUseCase;
 import software.ulpgc.chess.application.OfferDrawUseCase;
+import software.ulpgc.chess.application.PlayAiMoveUseCase;
 import software.ulpgc.chess.application.RematchUseCase;
 import software.ulpgc.chess.application.ResignUseCase;
 import software.ulpgc.chess.application.RoomRepository;
 import software.ulpgc.chess.application.SendMessageUseCase;
+import software.ulpgc.chess.domain.ai.Engine;
 import software.ulpgc.chess.infrastructure.http.GameController;
 import software.ulpgc.chess.infrastructure.http.RoomController;
 import software.ulpgc.chess.infrastructure.persistence.InMemoryChatRepository;
@@ -31,6 +34,8 @@ import software.ulpgc.chess.infrastructure.persistence.SqliteRoomRepository;
 import software.ulpgc.chess.infrastructure.websocket.WebSocketRoomNotifier;
 
 import java.time.Clock;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -48,6 +53,8 @@ public class Main {
             chat = new SqliteChatRepository(database);
         }
 
+        Map<String, Engine> engines = new LinkedHashMap<>();
+
         Clock clock = Clock.systemUTC();
         WebSocketRoomNotifier notifier = new WebSocketRoomNotifier(rooms);
         GetRoomUseCase getRoom = new GetRoomUseCase(games, rooms, notifier, clock);
@@ -56,7 +63,9 @@ public class Main {
                 new CreateGameUseCase(games),
                 new GetGameUseCase(games),
                 new MovePieceUseCase(games),
-                new GetLegalMovesUseCase(games)
+                new GetLegalMovesUseCase(games),
+                new PlayAiMoveUseCase(games, engines),
+                new GetAiLevelsUseCase(engines)
         );
         RoomController roomController = new RoomController(
                 new CreateRoomUseCase(games, rooms),

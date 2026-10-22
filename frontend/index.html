@@ -25,7 +25,7 @@
                 <span class="field-label">MODO</span>
                 <div class="choice-row" id="mode-choice">
                     <button class="pixel-btn choice" data-mode="online">MULTIJUGADOR</button>
-                    <button class="pixel-btn choice" data-mode="ai" disabled>VS IA <small>PROXIMAMENTE</small></button>
+                    <button class="pixel-btn choice" data-mode="ai">VS IA</button>
                     <button class="pixel-btn choice" data-mode="local">LOCAL</button>
                 </div>
             </div>
@@ -46,6 +46,22 @@
                     <input id="room-code" class="pixel-input" placeholder="CÓDIGO" maxlength="6" autocomplete="off">
                     <button type="submit" class="pixel-btn">UNIRSE</button>
                 </form>
+            </div>
+
+            <div class="lobby-ai" data-for="ai" hidden>
+                <div class="field">
+                    <span class="field-label">NIVEL</span>
+                    <div class="choice-row" id="level-choice"></div>
+                </div>
+                <div class="field">
+                    <span class="field-label">JUEGAS CON</span>
+                    <div class="choice-row" id="color-choice">
+                        <button class="pixel-btn choice" data-color="White">BLANCAS</button>
+                        <button class="pixel-btn choice" data-color="Black">NEGRAS</button>
+                    </div>
+                </div>
+                <p class="lobby-hint" id="ai-unavailable" hidden>Todavía no hay ningún nivel de IA disponible.</p>
+                <button id="ai-game" class="pixel-btn pixel-btn-big">EMPEZAR PARTIDA</button>
             </div>
 
             <div class="lobby-local" data-for="local" hidden>

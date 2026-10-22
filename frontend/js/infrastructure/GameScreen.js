@@ -60,7 +60,7 @@ export class GameScreen {
         this.#match = match;
         const online = match.mode === "online";
         this.#board.render(match.game, {
-            player: online ? match.you : null,
+            player: match.mode === "local" ? null : match.you,
             locked: online && (match.you === null || !match.black.joined)
         });
         this.#players.render(match);

@@ -26,9 +26,13 @@ public record Game(String id, Position position, List<PlayedMove> history, Endin
     public static Game restore(String id, List<Move> moves, Ending ending, ChessClock clock) {
         Game game = start(id);
         for (Move move : moves) {
-            game = game.play(move.from(), move.to(), move.promotion() == null ? PieceType.Queen : move.promotion());
+            game = game.play(move);
         }
         return new Game(id, game.position, game.history, ending, clock);
+    }
+
+    public Game play(Move move) {
+        return play(move.from(), move.to(), move.promotion() == null ? PieceType.Queen : move.promotion());
     }
 
     public Game play(Square from, Square to) {

@@ -1,4 +1,5 @@
 const COPIED_MS = 1500;
+const TITLES = { online: "SALA MULTIJUGADOR:", ai: "PARTIDA VS IA:", local: "PARTIDA LOCAL:" };
 
 export class RoomBarView {
     #element;
@@ -14,8 +15,8 @@ export class RoomBarView {
     render(match) {
         const online = match.mode === "online";
         this.#code = match.code;
-        this.#element.querySelector(".room-bar-title").textContent = online ? "SALA MULTIJUGADOR:" : "PARTIDA LOCAL:";
-        this.#element.querySelector(".room-code").textContent = online ? `#${match.code}` : "1 VS 1";
+        this.#element.querySelector(".room-bar-title").textContent = TITLES[match.mode];
+        this.#element.querySelector(".room-code").textContent = online ? `#${match.code}` : match.mode === "ai" ? "1 VS CPU" : "1 VS 1";
         this.#element.querySelector(".ping").hidden = !online;
         this.#copyButton.hidden = !online;
     }

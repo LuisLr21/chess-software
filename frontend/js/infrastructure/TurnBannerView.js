@@ -86,6 +86,9 @@ function describe(match) {
             ? { text: "TABLAS OFRECIDAS · ESPERANDO RESPUESTA", tone: "tone-wait", actions: [] }
             : { text: `${opponentName(match.drawOfferedBy)} OFRECE TABLAS`, tone: "tone-offer", actions: ["accept-draw", "decline-draw"] };
     }
+    if (match.thinking) {
+        return { text: "LA CPU ESTA PENSANDO...", tone: "tone-wait", actions: [] };
+    }
     const side = game.sideToMove;
     const yours = match.you === side ? " (TU)" : "";
     const check = game.inCheck ? " · JAQUE!" : "";

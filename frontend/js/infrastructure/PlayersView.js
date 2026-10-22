@@ -16,15 +16,16 @@ export class PlayersView {
             const you = match.you === color ? " (TU)" : "";
             row.querySelector(".player-name").textContent = (player.name ?? "???").toUpperCase() + you;
             const presence = row.querySelector(".player-presence");
-            presence.textContent = presenceText(match.mode, player);
+            presence.textContent = presenceText(match, color, player);
             presence.className = `player-presence ${player.joined && player.online ? "online" : "offline"}`;
             row.classList.toggle("active", match.game.status === "InProgress" && match.game.sideToMove === color);
         }
     }
 }
 
-function presenceText(mode, player) {
-    if (mode === "local") return "● JUGADOR LOCAL";
+function presenceText(match, color, player) {
+    if (match.mode === "ai" && color !== match.you) return match.thinking ? "● PENSANDO..." : "● CPU";
+    if (match.mode !== "online") return "● JUGADOR LOCAL";
     if (!player.joined) return "○ ESPERANDO...";
     return player.online ? "● EN LINEA" : "○ DESCONECTADO";
 }

@@ -1,5 +1,5 @@
 const KEY = "chess-preferences";
-const DEFAULTS = { name: "", minutes: 10, muted: false };
+const DEFAULTS = { name: "", minutes: 10, muted: false, aiLevel: null, aiColor: "White" };
 
 export class BrowserPreferences {
     #values;

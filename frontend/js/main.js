@@ -1,4 +1,5 @@
 import { LocalGame } from "./application/LocalGame.js";
+import { AiGame } from "./application/AiGame.js";
 import { OnlineGame } from "./application/OnlineGame.js";
 import { GameScreen } from "./infrastructure/GameScreen.js";
 import { LobbyView } from "./infrastructure/LobbyView.js";
@@ -28,16 +29,19 @@ const screen = new GameScreen(gameArea, preferences, {
     onRematch: () => online.rematch(),
     onSendMessage: text => online.sendMessage(text),
     onTimeUp: () => online.refresh(),
-    onNewGame: () => local.start(),
+    onNewGame: () => controller.restart(),
     onLeave: leave
 });
 const local = new LocalGame(gameService, screen);
 const online = new OnlineGame(roomService, screen, new BrowserSessionStore());
+const ai = new AiGame(gameService, screen);
 const lobby = new LobbyView(document.getElementById("lobby"), preferences, {
     onCreate: (name, minutes) => enter(online, () => online.create(name, minutes)),
     onJoin: (code, name) => enter(online, () => online.join(code, name)),
-    onLocal: () => enter(local, () => local.start())
+    onLocal: () => enter(local, () => local.start()),
+    onAi: (level, color, name) => enter(ai, () => ai.start(level, color, name))
 });
+gameService.aiLevels().then(levels => lobby.showAiLevels(levels), () => lobby.showAiLevels([]));
 
 async function enter(game, start) {
     controller = game;

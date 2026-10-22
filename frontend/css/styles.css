@@ -221,7 +221,7 @@ button, input { font: inherit; color: inherit; }
 .choice-row .choice { flex: 1; }
 .choice small { display: block; margin-top: 3px; font-size: 6px; color: var(--muted); }
 
-.lobby-online, .lobby-local { display: flex; flex-direction: column; gap: 12px; }
+.lobby-online, .lobby-ai, .lobby-local { display: flex; flex-direction: column; gap: 12px; }
 
 .join-form { display: flex; gap: 6px; }
 #room-code { text-transform: uppercase; letter-spacing: 4px; }

@@ -26,7 +26,7 @@ Sistema de salas para jugar al ajedrez. Proyecto individual de **Ingeniería del
 | Piezas capturadas y ventaja de material | ✅ |
 | Chat entre los dos jugadores | ✅ |
 | Interfaz final retro 16-bit: piezas pixel-art propias, sonidos 8-bit | ✅ |
-| Aportación propia: jugar contra la IA | ⏳ |
+| Aportación propia: jugar contra la IA (modo y API listos, motores en desarrollo) | ⏳ |
 | Tests automáticos | ⏳ |
 
 ## Estructura del repositorio
@@ -59,12 +59,14 @@ infrastructure/   Adaptadores: HTTP y WebSocket (Javalin), persistencia (SQLite 
     - `AttackDetector` sabe qué casillas están atacadas. `CheckDetector` lo usa para el jaque y `CastlingRule` para que el rey no enroque pasando por casillas atacadas.
     - `LegalMoveValidator` combina las reglas de movimiento, el enroque y la comprobación de que el propio rey no queda en jaque.
     - `LegalMoveGenerator` lista los movimientos legales. `GameStatusEvaluator` decide si la partida sigue, es mate, ahogado o tablas.
+  - `ai/Engine`: un motor de IA recibe una `Position` y elige un `Move`. Cada nivel es una implementación (patrón Strategy). `LegalMoveGenerator.allLegalMoves` le da todos los movimientos legales, promociones incluidas.
   - `Room`: código de sala, partida asociada, los dos `Seat` (token secreto + nombre) y las ofertas pendientes de tablas y de revancha. Contiene las reglas de la sala: esperar al rival, solo juegan sus dos jugadores, cada uno en su turno, y la revancha intercambia los colores.
   - `ChatMessage`: mensaje de un jugador (máximo 200 caracteres, nunca vacío).
 - **`application`**:
   - Partidas: `CreateGameUseCase`, `GetGameUseCase`, `MovePieceUseCase`, `GetLegalMovesUseCase`.
   - Salas: `CreateRoomUseCase`, `JoinRoomUseCase`, `GetRoomUseCase`, `MoveInRoomUseCase`, `ResignUseCase`, `OfferDrawUseCase` (si el rival ya las había ofrecido, las acepta), `DeclineDrawUseCase`, `RematchUseCase`.
   - Chat: `SendMessageUseCase`, `GetMessagesUseCase`.
+  - IA: `PlayAiMoveUseCase`, `GetAiLevelsUseCase`. Los motores se registran en `Main` con su nombre de nivel.
   - Puertos de salida: `GameRepository`, `RoomRepository`, `ChatRepository` (persistencia) y `RoomNotifier` (avisar a los jugadores de cambios en la sala y de mensajes nuevos).
   - Los casos de uso que dependen de la hora reciben un `java.time.Clock`, para poder usar un reloj fijo en los tests.
 - **`infrastructure`**:
@@ -142,6 +144,8 @@ Las piezas son pixel-art propio y los sonidos se generan con la Web Audio API (o
 | `GET` | `/games/{id}` | Estado de una partida | 200, 404 |
 | `GET` | `/games/{id}/moves?from=e2` | Casillas a las que puede moverse la pieza de `from` | 200, 400, 404 |
 | `POST` | `/games/{id}/moves` | Realiza un movimiento | 200, 400, 404, 409, 422 |
+| `POST` | `/games/{id}/ai-move?level=random` | La IA del nivel indicado juega el movimiento del bando que mueve | 200, 400, 404, 409 |
+| `GET` | `/ai/levels` | Niveles de IA disponibles, en orden | 200 |
 
 ### Salas
 

@@ -3,9 +3,11 @@ package software.ulpgc.chess.infrastructure.http;
 import io.javalin.config.RoutesConfig;
 import software.ulpgc.chess.application.CreateGameUseCase;
 import software.ulpgc.chess.application.GameNotFoundException;
+import software.ulpgc.chess.application.GetAiLevelsUseCase;
 import software.ulpgc.chess.application.GetGameUseCase;
 import software.ulpgc.chess.application.GetLegalMovesUseCase;
 import software.ulpgc.chess.application.MovePieceUseCase;
+import software.ulpgc.chess.application.PlayAiMoveUseCase;
 import software.ulpgc.chess.domain.Game;
 import software.ulpgc.chess.domain.GameOverException;
 import software.ulpgc.chess.domain.IllegalMoveException;
@@ -18,13 +20,17 @@ public class GameController {
     private final GetGameUseCase getGame;
     private final MovePieceUseCase movePiece;
     private final GetLegalMovesUseCase getLegalMoves;
+    private final PlayAiMoveUseCase playAiMove;
+    private final GetAiLevelsUseCase getAiLevels;
 
     public GameController(CreateGameUseCase createGame, GetGameUseCase getGame, MovePieceUseCase movePiece,
-                          GetLegalMovesUseCase getLegalMoves) {
+                          GetLegalMovesUseCase getLegalMoves, PlayAiMoveUseCase playAiMove, GetAiLevelsUseCase getAiLevels) {
         this.createGame = createGame;
         this.getGame = getGame;
         this.movePiece = movePiece;
         this.getLegalMoves = getLegalMoves;
+        this.playAiMove = playAiMove;
+        this.getAiLevels = getAiLevels;
     }
 
     public void register(RoutesConfig routes) {
@@ -46,6 +52,11 @@ public class GameController {
                     request.promotionType());
             ctx.json(GameResponse.from(game));
         });
+
+        routes.post("/games/{id}/ai-move", ctx ->
+                ctx.json(GameResponse.from(playAiMove.execute(ctx.pathParam("id"), ctx.queryParam("level")))));
+
+        routes.get("/ai/levels", ctx -> ctx.json(getAiLevels.execute()));
 
         routes.exception(GameNotFoundException.class, (e, ctx) -> ctx.status(404).json(new ErrorResponse(e.getMessage())));
         routes.exception(GameOverException.class, (e, ctx) -> ctx.status(409).json(new ErrorResponse(e.getMessage())));

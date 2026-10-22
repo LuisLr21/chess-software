@@ -1,4 +1,5 @@
 const CONFIRM_MS = 3000;
+const MODES = { online: "MULTIJUGADOR", ai: "VS IA", local: "LOCAL" };
 
 export class OptionsView {
     #element;
@@ -29,7 +30,7 @@ export class OptionsView {
         const isPlayer = match.you !== null;
         const opponentOffered = offer => offer !== null && offer !== match.you;
 
-        this.#element.querySelector(".option-mode").textContent = online ? "MULTIJUGADOR" : "LOCAL";
+        this.#element.querySelector(".option-mode").textContent = MODES[match.mode];
         this.#element.querySelector(".option-time").textContent =
             match.clock ? `${match.clock.initialMillis / 60000} MIN` : "SIN RELOJ";
         this.renderSound(muted);

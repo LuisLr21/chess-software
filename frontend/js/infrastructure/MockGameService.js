@@ -63,6 +63,18 @@ export class MockGameService extends GameService {
         }
         return destinations;
     }
+
+    async aiMove(id, level) {
+        const game = await this.getGame(id);
+        const isOwn = symbol => isWhite(symbol) === (game.sideToMove === "White");
+        const from = Object.keys(game.pieces).find(square => isOwn(game.pieces[square]));
+        const to = (await this.legalMoves(id, from)).find(square => !game.pieces[square]);
+        return this.move(id, from, to);
+    }
+
+    async aiLevels() {
+        return ["random"];
+    }
 }
 
 function isWhite(symbol) {
