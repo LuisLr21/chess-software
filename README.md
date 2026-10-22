@@ -26,7 +26,7 @@ Sistema de salas para jugar al ajedrez. Proyecto individual de **Ingeniería del
 | Piezas capturadas y ventaja de material | ✅ |
 | Chat entre los dos jugadores | ✅ |
 | Interfaz final retro 16-bit: piezas pixel-art propias, sonidos 8-bit | ✅ |
-| Aportación propia: jugar contra la IA (modo y API listos, motores en desarrollo) | ⏳ |
+| Aportación propia: jugar contra la IA (fácil, medio y difícil; con blancas o negras) | ✅ |
 | Tests automáticos | ⏳ |
 
 ## Estructura del repositorio
@@ -60,6 +60,9 @@ infrastructure/   Adaptadores: HTTP y WebSocket (Javalin), persistencia (SQLite 
     - `LegalMoveValidator` combina las reglas de movimiento, el enroque y la comprobación de que el propio rey no queda en jaque.
     - `LegalMoveGenerator` lista los movimientos legales. `GameStatusEvaluator` decide si la partida sigue, es mate, ahogado o tablas.
   - `ai/Engine`: un motor de IA recibe una `Position` y elige un `Move`. Cada nivel es una implementación (patrón Strategy). `LegalMoveGenerator.allLegalMoves` le da todos los movimientos legales, promociones incluidas.
+    - `RandomEngine` (fácil): un movimiento legal al azar.
+    - `GreedyEngine` (medio): la captura de más valor; si no hay ninguna, al azar.
+    - `MinimaxEngine` (difícil): minimax con poda alfa-beta a profundidad 3. `PositionEvaluator` puntúa las posiciones por material (`PieceValues`, en centésimas de peón), el mate vale más cuanto antes llegue y las tablas valen 0.
   - `Room`: código de sala, partida asociada, los dos `Seat` (token secreto + nombre) y las ofertas pendientes de tablas y de revancha. Contiene las reglas de la sala: esperar al rival, solo juegan sus dos jugadores, cada uno en su turno, y la revancha intercambia los colores.
   - `ChatMessage`: mensaje de un jugador (máximo 200 caracteres, nunca vacío).
 - **`application`**:
@@ -267,9 +270,9 @@ Al arrancar se crean las tablas que falten y se añaden las columnas nuevas a un
 - **Casos de uso de sala `synchronized`**: dos peticiones simultáneas (por ejemplo, dos personas uniéndose a la vez) se procesan una detrás de otra.
 - **Regla de los 50 movimientos automática**: en el reglamento FIDE es una tabla que se reclama. Aquí se aplica automáticamente para simplificar.
 - **Reloj solo en partidas online**: la partida local no tiene reloj.
+- **IA con profundidad fija**: minimax no puede recorrer todo el árbol del ajedrez, como sí se puede en el 3 en raya. Busca 3 medios movimientos y evalúa la posición a la que llega. Con la poda alfa-beta, cada jugada tarda del orden de 100 ms; con profundidad 4 serían unos 600 ms en mitad de partida.
 - **No implementado (por ahora)**: tablas por triple repetición.
 
 ## Próximos pasos
 
-- Aportación propia: jugar contra la IA (niveles aleatorio, capturas y minimax con poda alfa-beta).
 - Tests.
