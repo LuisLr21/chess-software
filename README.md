@@ -27,7 +27,7 @@ Sistema de salas para jugar al ajedrez. Proyecto individual de **Ingeniería del
 | Chat entre los dos jugadores | ✅ |
 | Interfaz final retro 16-bit: piezas pixel-art propias, sonidos 8-bit | ✅ |
 | Aportación propia: jugar contra la IA (fácil, medio y difícil; con blancas o negras) | ✅ |
-| Tests automáticos | ⏳ |
+| Tests automáticos (JUnit 6, 182 tests) | ✅ |
 
 ## Estructura del repositorio
 
@@ -126,6 +126,33 @@ Variables de entorno opcionales:
 Javalin sirve los ficheros del frontend con `config.staticFiles` (`Location.EXTERNAL`). La página y la API comparten origen, así que no hace falta CORS y el frontend usa `location.origin` como URL de la API. Los módulos ES no funcionan abriendo el HTML con doble clic (`file://`); siempre hay que entrar por http://localhost:7070.
 
 **Para probar una sala tú solo**, abre dos pestañas. En una elige *Multijugador*, el tiempo y pulsa *Crear sala*. En la otra escribe el código y pulsa *Unirse*. La sesión se guarda por pestaña (`sessionStorage`), así que cada pestaña es un jugador distinto y recargar no te saca de la sala.
+
+## Tests
+
+```
+cd backend
+mvn test
+```
+
+o, en IntelliJ, click derecho en `backend/src/test/java` → *Run 'All Tests'*.
+
+Los tests están en `backend/src/test/java`, en el mismo paquete que la clase que prueban:
+
+| Capa | Qué se prueba |
+|---|---|
+| `domain` | Movimiento de cada pieza, jaque y clavadas, enroque, en passant, promoción, mate, ahogado, material insuficiente, regla de los 50 movimientos, SAN, reloj, reglas de la sala, chat |
+| `domain.ai` | Random siempre juega un movimiento legal, greedy captura la pieza de más valor, minimax encuentra el mate en una (con blancas y con negras) y no regala la dama |
+| `application` | Casos de uso con repositorios en memoria: crear y unirse a salas, turnos, tiempo agotado, tablas, rendición, revancha, chat, partidas locales e IA |
+| `infrastructure.persistence` | Los repositorios SQLite guardan y recuperan partidas (con promociones, final y reloj), salas y mensajes, sobre una base de datos temporal |
+
+Ayudantes de test:
+- `Positions` monta posiciones a partir de una lista de piezas (`"Ke1"`, `"ra8"`: mayúsculas blancas, minúsculas negras).
+- `Games` juega una partida a partir de movimientos en notación UCI (`"e2e4"`, `"a7b8n"`).
+- `MutableClock` es un reloj que se adelanta a mano, para probar el tiempo sin esperar.
+- `RecordingNotifier` apunta los avisos que se enviarían a los jugadores.
+- `RoomFixture` monta todos los casos de uso de salas con repositorios en memoria.
+
+El frontend no tiene tests automáticos: no usa herramientas de compilación ni dependencias, y toda la lógica del juego está en el backend.
 
 ## La interfaz
 
@@ -272,7 +299,3 @@ Al arrancar se crean las tablas que falten y se añaden las columnas nuevas a un
 - **Reloj solo en partidas online**: la partida local no tiene reloj.
 - **IA con profundidad fija**: minimax no puede recorrer todo el árbol del ajedrez, como sí se puede en el 3 en raya. Busca 3 medios movimientos y evalúa la posición a la que llega. Con la poda alfa-beta, cada jugada tarda del orden de 100 ms; con profundidad 4 serían unos 600 ms en mitad de partida.
 - **No implementado (por ahora)**: tablas por triple repetición.
-
-## Próximos pasos
-
-- Tests.
