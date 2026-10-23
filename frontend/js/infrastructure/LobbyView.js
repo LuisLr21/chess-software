@@ -3,7 +3,8 @@ import { pieceSvg } from "./PixelPieces.js";
 const LEVEL_NAMES = {
     random: "FACIL",
     greedy: "MEDIO",
-    minimax: "DIFICIL"
+    minimax: "DIFICIL",
+    expert: "EXPERTO"
 };
 
 const ERRORS = {

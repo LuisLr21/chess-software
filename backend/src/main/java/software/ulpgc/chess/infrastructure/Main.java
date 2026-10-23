@@ -22,6 +22,7 @@ import software.ulpgc.chess.application.ResignUseCase;
 import software.ulpgc.chess.application.RoomRepository;
 import software.ulpgc.chess.application.SendMessageUseCase;
 import software.ulpgc.chess.domain.ai.Engine;
+import software.ulpgc.chess.domain.ai.ExpertEngine;
 import software.ulpgc.chess.domain.ai.GreedyEngine;
 import software.ulpgc.chess.domain.ai.MinimaxEngine;
 import software.ulpgc.chess.domain.ai.RandomEngine;
@@ -37,6 +38,7 @@ import software.ulpgc.chess.infrastructure.persistence.SqliteRoomRepository;
 import software.ulpgc.chess.infrastructure.websocket.WebSocketRoomNotifier;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -61,6 +63,7 @@ public class Main {
         engines.put("random", new RandomEngine());
         engines.put("greedy", new GreedyEngine());
         engines.put("minimax", new MinimaxEngine(3));
+        engines.put("expert", new ExpertEngine(Duration.ofSeconds(3), 8));
 
         Clock clock = Clock.systemUTC();
         WebSocketRoomNotifier notifier = new WebSocketRoomNotifier(rooms);
