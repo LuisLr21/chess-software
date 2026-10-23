@@ -40,6 +40,19 @@ class LegalMoveGeneratorTest {
     }
 
     @Test
+    void listsOnlyTheCaptures() {
+        Position position = Positions.of(Color.White, "Ka1", "Rd4", "Pb2", "kh8", "pd7", "ph4", "pc3");
+        assertEquals(Set.of(Games.move("d4d7"), Games.move("d4h4"), Games.move("b2c3")),
+                Set.copyOf(generator.allLegalCaptures(position)));
+    }
+
+    @Test
+    void theCapturesIncludeEnPassant() {
+        Position position = Games.play("e2e4", "a7a6", "e4e5", "d7d5").position();
+        assertTrue(generator.allLegalCaptures(position).contains(Games.move("e5d6")));
+    }
+
+    @Test
     void detectsWhenThereAreNoLegalMoves() {
         assertTrue(generator.hasAnyLegalMove(Position.initial()));
         assertFalse(generator.hasAnyLegalMove(Positions.of(Color.Black, "ka8", "Qb6", "Kc6")));

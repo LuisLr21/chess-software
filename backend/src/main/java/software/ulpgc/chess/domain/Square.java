@@ -15,6 +15,11 @@ public record Square(File file, Rank rank) {
     }
 
     @Override
+    public int hashCode() {
+        return file.ordinal() * 8 + rank.ordinal();
+    }
+
+    @Override
     public String toString() {
         return "" + file.symbol() + rank.value();
     }
