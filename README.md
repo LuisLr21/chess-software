@@ -53,7 +53,7 @@ Como **idea propia**, se puede jugar también **contra la IA** con tres niveles 
 | Chat entre los dos jugadores | ✅ |
 | Interfaz retro 16-bit: piezas pixel-art propias, sonidos 8-bit | ✅ |
 | **Idea propia**: jugar contra la IA (fácil, medio y difícil; con blancas o negras) | ✅ |
-| Tests automáticos (JUnit 6, 182 tests) | ✅ |
+| Tests automáticos (JUnit 6, 191 tests) | ✅ |
 
 ## Capturas
 
@@ -431,14 +431,16 @@ Un tercer modo de juego, **VS IA**, además de *Multijugador* y *Local*. En la p
 | Fácil | `RandomEngine` | Un movimiento legal al azar |
 | Medio | `GreedyEngine` | Captura la pieza de más valor que pueda; si no hay ninguna captura, juega al azar. No mira qué pasa después, así que cae en trampas |
 | Difícil | `MinimaxEngine` | Minimax con poda alfa-beta a 3 medios movimientos. Ve mates en una y dos jugadas, no regala piezas y aprovecha las que se dejan sin defender |
+| Experto | `ExpertEngine` | Negamax con poda alfa-beta, profundización iterativa (hasta 3 s por jugada), ordenación de jugadas y búsqueda de quiescencia. Evalúa material y posición: centraliza, desarrolla, enroca y, en el final, arrincona al rey rival |
 
 Mientras la IA piensa, el panel del jugador muestra *Pensando...*. Si eliges negras, la IA hace la primera jugada.
 
 ### Cómo está hecho
 
 - **Dominio** (`domain/ai/`): la interfaz `Engine` tiene un único método, `Move chooseMove(Position)`. Cada nivel es una implementación (**patrón Strategy**). `PositionEvaluator` puntúa una posición por material (`PieceValues`, en centésimas de peón: peón 100, caballo y alfil 300, torre 500, dama 900). En minimax, un mate vale más cuanto antes llega y las tablas valen 0.
+- **Nivel experto** (`domain/ai/`): `ExpertEngine` busca primero a profundidad 1, luego 2, 3... hasta agotar el tiempo, y se queda con la última búsqueda completa (*iterative deepening*); la mejor jugada de una vuelta se prueba la primera en la siguiente. `MoveOrdering` ordena las jugadas para que alfa-beta pode más (primero comer la pieza más valiosa con la menos valiosa). Al llegar a la profundidad límite no evalúa sin más: sigue mirando solo capturas hasta que la posición queda tranquila (*quiescencia*, con `LegalMoveGenerator.allLegalCaptures`), así no cae en el efecto horizonte de comer un peón con la dama sin ver que se la comen después. `PositionalEvaluator` suma al material las tablas pieza-casilla de `PieceSquareTables` (otra tabla para el rey en el final) y, en finales ganados, premia acercar el rey propio y llevar el rival al borde.
 - **Aplicación**: `PlayAiMoveUseCase` carga la partida, pide el movimiento al motor del nivel elegido, lo juega con las mismas reglas que cualquier otro movimiento y lo guarda. `GetAiLevelsUseCase` dice qué niveles hay.
-- **Infraestructura**: `Main` registra los motores en un mapa ordenado (`random`, `greedy`, `minimax`). Hay dos rutas nuevas, `POST /games/{id}/ai-move?level=...` y `GET /ai/levels`.
+- **Infraestructura**: `Main` registra los motores en un mapa ordenado (`random`, `greedy`, `minimax`, `expert`). Hay dos rutas nuevas, `POST /games/{id}/ai-move?level=...` y `GET /ai/levels`.
 - **Frontend**: un caso de uso nuevo, `AiGame`, al lado de `LocalGame` y `OnlineGame`. El lobby construye los botones de nivel a partir de `GET /ai/levels`.
 
 ### Por qué encaja con el trabajo
@@ -451,6 +453,8 @@ Mientras la IA piensa, el panel del jugador muestra *Pensando...*. Si eliges neg
 ### Rendimiento
 
 Minimax no puede recorrer el árbol completo del ajedrez, como sí se puede en el 3 en raya: hay unos 35 movimientos posibles por posición, así que 6 medios movimientos ya son casi 2.000 millones de posiciones. Por eso busca a profundidad fija y evalúa la posición a la que llega. Medido en este proyecto, con poda alfa-beta: unos **100 ms por jugada a profundidad 3** y unos 600 ms a profundidad 4 en mitad de partida. Se eligió 3 para que la respuesta sea inmediata.
+
+El nivel experto, en cambio, tiene un límite de tiempo: 3 segundos por jugada (si una vuelta termina después de la mitad del tiempo, ya no empieza la siguiente). Así llega a profundidad 4 o 5 más la quiescencia. Para que llegara tan hondo se midió con un perfilador (JFR) dónde se iba el tiempo: la mitad se gastaba buscando casillas en el mapa del tablero, porque el `hashCode` generado del record `Square` es lento. Con un `hashCode` propio (`file * 8 + rank`, sin colisiones) la búsqueda va el doble de rápido. En dos partidas de prueba, experto contra difícil, ganó experto las dos (una con cada color).
 
 ## Contrato de comunicación (API)
 
@@ -582,12 +586,12 @@ Una partida registrada se consulta con `GET /games/{id}` (estado e historial com
 
 ### Tests automáticos
 
-**182 tests JUnit** del backend, todos en verde:
+**191 tests JUnit** del backend, todos en verde:
 
 ```
 mvn -f backend/pom.xml test
 ...
-Tests run: 182, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 191, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
@@ -596,7 +600,7 @@ Están en `backend/src/test/java`, en el mismo paquete que la clase que prueban:
 | Capa | Qué se prueba |
 |---|---|
 | `domain` | Movimiento de cada pieza, jaque y clavadas, enroque (incluida la casilla atacada que la torre sí puede cruzar), en passant, promoción, mate, ahogado, material insuficiente, regla de los 50 movimientos, SAN, reloj, reglas de la sala, chat |
-| `domain.ai` | Random siempre juega un movimiento legal; greedy captura la pieza de más valor; minimax encuentra el mate en una (con blancas y con negras) y no captura un peón defendido con la dama |
+| `domain.ai` | Random siempre juega un movimiento legal; greedy captura la pieza de más valor; minimax encuentra el mate en una (con blancas y con negras) y no captura un peón defendido con la dama; experto encuentra el mate en una y en dos, y gracias a la quiescencia no se come el peón defendido ni siquiera a profundidad 1; el evaluador posicional es simétrico y prefiere un caballo centrado |
 | `application` | Casos de uso con repositorios en memoria: crear y unirse a salas, turnos, tiempo agotado, tablas, rendición, revancha, chat, partidas locales e IA |
 | `infrastructure.persistence` | Los repositorios SQLite guardan y recuperan partidas (con promociones, final y reloj), salas y mensajes, sobre una base de datos temporal, también tras cerrarla y volver a abrirla |
 
@@ -617,7 +621,7 @@ Hechas sobre el sistema completo, con el backend real, SQLite y dos navegadores.
 
 | Comprobación | Resultado |
 |---|---|
-| Ejecutar desde una copia limpia | `git clone` del repositorio en una carpeta vacía → `mvn test` (182 tests en verde) → arrancar `Main` → la página carga en `http://localhost:7070`, `GET /ai/levels` devuelve `["random","greedy","minimax"]` y `POST /rooms` devuelve `201` |
+| Ejecutar desde una copia limpia | `git clone` del repositorio en una carpeta vacía → `mvn test` (191 tests en verde) → arrancar `Main` → la página carga en `http://localhost:7070`, `GET /ai/levels` devuelve `["random","greedy","minimax","expert"]` y `POST /rooms` devuelve `201` |
 | Crear una sala y unir a dos usuarios | Luis crea la sala `5QNMRL`, Ana se une con el código desde otro navegador (capturas 2, 3 y 4) |
 | Registrar varios movimientos | 19 medios movimientos de una apertura italiana, con capturas, jaques y desambiguación (`Nbxd2`). Cada jugador ve los del otro en tiempo real |
 | Consultar el histórico | `GET /games/{id}` devuelve los 19 movimientos en UCI y en SAN, y las piezas capturadas |
