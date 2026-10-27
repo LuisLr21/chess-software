@@ -5,6 +5,7 @@ export class OnlineGame {
     #session = null;
     #room = null;
     #presence = { white: false, black: false };
+    #reportedGames = new Set();
     #unsubscribe = null;
 
     constructor(service, screen, store) {
@@ -67,6 +68,14 @@ export class OnlineGame {
         return this.#act(() => this.#service.rematch(this.#session.code, this.#session.playerToken));
     }
 
+    async report() {
+        try {
+            await this.#service.report(this.#session.code, this.#session.playerToken, "Mala deportividad: deja correr su reloj");
+        } catch (error) {
+            this.#screen.showError(error);
+        }
+    }
+
     async sendMessage(text) {
         try {
             await this.#service.sendMessage(this.#session.code, this.#session.playerToken, text);
@@ -100,7 +109,12 @@ export class OnlineGame {
                 this.#presence = presence;
                 this.#update(this.#room);
             },
-            onChat: message => this.#screen.addMessage(message)
+            onChat: message => this.#screen.addMessage(message),
+            onReport: report => {
+                if (report.reporter === this.#room?.you) this.#reportedGames.add(report.gameId);
+                this.#screen.addReport(report);
+                this.#update(this.#room);
+            }
         });
     }
 
@@ -116,7 +130,8 @@ export class OnlineGame {
             game: room.game,
             clock: room.clock,
             drawOfferedBy: room.drawOfferedBy,
-            rematchOfferedBy: room.rematchOfferedBy
+            rematchOfferedBy: room.rematchOfferedBy,
+            reported: this.#reportedGames.has(room.game.id)
         });
     }
 }

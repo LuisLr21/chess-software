@@ -49,6 +49,10 @@ export class HttpRoomService extends RoomService {
         return request(this.#baseUrl, "POST", `/rooms/${code}/rematch`, undefined, tokenHeader(playerToken));
     }
 
+    async report(code, playerToken, reason) {
+        return request(this.#baseUrl, "POST", `/rooms/${code}/reports`, { reason }, tokenHeader(playerToken));
+    }
+
     async messages(code) {
         return request(this.#baseUrl, "GET", `/rooms/${code}/messages`);
     }
@@ -57,13 +61,14 @@ export class HttpRoomService extends RoomService {
         return request(this.#baseUrl, "POST", `/rooms/${code}/messages`, { text }, tokenHeader(playerToken));
     }
 
-    subscribe(code, playerToken, { onRoom, onPresence, onChat }) {
+    subscribe(code, playerToken, { onRoom, onPresence, onChat, onReport }) {
         let socket;
         let active = true;
         const handlers = {
             room: event => onRoom(event.room),
             presence: event => onPresence({ white: event.white, black: event.black }),
-            chat: event => onChat(event.message)
+            chat: event => onChat(event.message),
+            report: event => onReport(event.report)
         };
         const connect = () => {
             socket = new WebSocket(`${this.#socketUrl}/rooms/${code}/events?token=${encodeURIComponent(playerToken)}`);

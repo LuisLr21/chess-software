@@ -40,6 +40,7 @@ export class GameScreen {
             onNewGame: actions.onNewGame,
             onDraw: actions.onDraw,
             onResign: actions.onResign,
+            onReport: actions.onReport,
             onMute: () => this.#toggleSound(),
             onLeave: actions.onLeave
         });
@@ -86,6 +87,11 @@ export class GameScreen {
         if (message.author !== this.#match?.you) this.#sounds.notify();
     }
 
+    addReport(report) {
+        this.#chat.addSystem(reportText(report, this.#match));
+        if (report.reporter !== this.#match?.you) this.#sounds.notify();
+    }
+
     showError(error) {
         this.#banner.flash(ERRORS[error.status] ?? "ERROR DE CONEXION");
     }
@@ -123,6 +129,18 @@ export class GameScreen {
         else if (captures(after) > captures(before)) this.#sounds.capture();
         else this.#sounds.move();
     }
+}
+
+function reportText(report, match) {
+    const name = color => (match?.[color.toLowerCase()].name ?? color).toUpperCase();
+    if (report.reporter !== match?.you) return `${name(report.reporter)} te ha reportado por mala deportividad.`;
+    const time = report.reportedTimeUsedMillis === null ? "" : ` Ha gastado ${minutesText(report.reportedTimeUsedMillis)} en ${report.reportedMoves} ${report.reportedMoves === 1 ? "jugada" : "jugadas"}.`;
+    return `Has reportado a ${name(report.reported)}: ${report.reason}.${time}`;
+}
+
+function minutesText(millis) {
+    const seconds = Math.floor(millis / 1000);
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function isNewOffer(before, after, you) {

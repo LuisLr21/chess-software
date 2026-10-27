@@ -8,7 +8,7 @@ export class OptionsView {
     #pending = null;
     #match = null;
 
-    constructor(element, { onRematch, onNewGame, onDraw, onResign, onMute, onLeave }) {
+    constructor(element, { onRematch, onNewGame, onDraw, onResign, onReport, onMute, onLeave }) {
         this.#element = element;
         for (const button of element.querySelectorAll("[data-action]")) {
             this.#buttons[button.dataset.action] = button;
@@ -18,6 +18,7 @@ export class OptionsView {
         this.#on("new-game", onNewGame);
         this.#on("draw", onDraw);
         this.#on("resign", () => this.#confirm("resign", onResign));
+        this.#on("report", () => this.#confirm("report", onReport));
         this.#on("mute", onMute);
         this.#on("leave", () => this.#isPlaying() ? this.#confirm("leave", onLeave) : onLeave());
     }
@@ -38,6 +39,7 @@ export class OptionsView {
         this.#show("rematch", online);
         this.#show("draw", online);
         this.#show("resign", online);
+        this.#show("report", online);
         this.#show("new-game", !online);
 
         this.#buttons.rematch.disabled = !isPlayer || !over || match.rematchOfferedBy === match.you;
@@ -46,6 +48,8 @@ export class OptionsView {
         this.#setLabel("draw", opponentOffered(match.drawOfferedBy) ? "ACEPTAR TABLAS" : null);
         this.#buttons.resign.disabled = !isPlayer || over || !match.black.joined;
         if (this.#pending !== "resign") this.#setLabel("resign", null);
+        this.#buttons.report.disabled = !isPlayer || !match.black.joined || match.reported;
+        if (this.#pending !== "report") this.#setLabel("report", match.reported ? "REPORTADO" : null);
     }
 
     renderSound(muted) {

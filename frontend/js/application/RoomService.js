@@ -35,6 +35,10 @@ export class RoomService {
         throw new Error("Not implemented");
     }
 
+    async report(code, playerToken, reason) {
+        throw new Error("Not implemented");
+    }
+
     async messages(code) {
         throw new Error("Not implemented");
     }
@@ -43,7 +47,7 @@ export class RoomService {
         throw new Error("Not implemented");
     }
 
-    subscribe(code, playerToken, { onRoom, onPresence, onChat }) {
+    subscribe(code, playerToken, { onRoom, onPresence, onChat, onReport }) {
         throw new Error("Not implemented");
     }
 }

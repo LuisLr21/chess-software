@@ -106,6 +106,7 @@ function endingText(game, match) {
         case "DrawByAgreement": return "TABLAS DE MUTUO ACUERDO";
         case "Resignation": return `${COLORS[loser]} ABANDONAN · GANA ${winner}`;
         case "Timeout": return `SIN TIEMPO · GANA ${winner}`;
+        case "Abandonment": return `${COLORS[loser]} SE DESCONECTAN · GANA ${winner}`;
         default: return game.status.toUpperCase();
     }
 }

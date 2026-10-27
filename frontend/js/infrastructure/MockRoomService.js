@@ -78,6 +78,22 @@ export class MockRoomService extends RoomService {
         return this.#changed(room, playerToken);
     }
 
+    async report(code, playerToken, reason) {
+        const room = await this.#room(code);
+        const reporter = colorOf(playerToken);
+        const report = {
+            gameId: room.game.id,
+            reporter,
+            reported: reporter === "White" ? "Black" : "White",
+            reason: reason || "Mala deportividad",
+            reportedTimeUsedMillis: null,
+            reportedMoves: 0,
+            reportedAt: new Date().toISOString()
+        };
+        for (const listener of this.#listeners.get(code) ?? []) listener.onReport(report);
+        return report;
+    }
+
     async messages(code) {
         return this.#messages.get(code) ?? [];
     }

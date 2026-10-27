@@ -24,6 +24,7 @@ const screen = new GameScreen(gameArea, preferences, {
     onSelect: square => controller.select(square),
     onMove: (from, to, promotion) => controller.move(from, to, promotion),
     onResign: () => online.resign(),
+    onReport: () => online.report(),
     onDraw: () => online.offerDraw(),
     onDeclineDraw: () => online.declineDraw(),
     onRematch: () => online.rematch(),
