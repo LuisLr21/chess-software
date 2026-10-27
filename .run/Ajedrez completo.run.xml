@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Ajedrez completo" type="CompoundRunConfigurationType">
+    <toRun name="AI Service" type="Application" />
+    <toRun name="Chess Server" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>
