@@ -13,7 +13,9 @@ import software.ulpgc.chess.server.infrastructure.adapters.persistence.InMemoryG
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameUseCasesTest {
     private final GameRepository games = new InMemoryGameRepository();
@@ -23,6 +25,7 @@ class GameUseCasesTest {
     private final GetLegalMovesUseCase legalMoves = new GetLegalMovesUseCase(games);
     private final FakeChessEngine engine = new FakeChessEngine();
     private final PlayAiMoveUseCase playAiMove = new PlayAiMoveUseCase(games, engine);
+    private final ReviewMoveUseCase reviewMove = new ReviewMoveUseCase(games, engine, "coach");
 
     @Test
     void aCreatedGameCanBeRead() {
@@ -72,6 +75,45 @@ class GameUseCasesTest {
 
         games.save(Game.start("over").resign(Color.White, null));
         assertThrows(GameOverException.class, () -> playAiMove.execute(new AiTurn("over", "first")));
+    }
+
+    @Test
+    void aReviewComparesTheMoveWithTheOneTheEngineSuggests() {
+        engine.plays("coach", "d2d4");
+        games.save(Games.play("e2e4"));
+
+        MoveReview review = reviewMove.execute(new MoveToReview("test", 0));
+        assertEquals("e4", review.played());
+        assertEquals("d4", review.suggested());
+        assertFalse(review.isBest());
+    }
+
+    @Test
+    void aReviewRecognisesTheBestMove() {
+        engine.plays("coach", "e2e4");
+        games.save(Games.play("e2e4"));
+
+        assertTrue(reviewMove.execute(new MoveToReview("test", 0)).isBest());
+    }
+
+    @Test
+    void aReviewUsesThePositionBeforeTheMoveEvenIfTheGameWentOn() {
+        engine.plays("coach", "g8f6");
+        games.save(Games.play("e2e4", "e7e5", "g1f3"));
+
+        MoveReview review = reviewMove.execute(new MoveToReview("test", 1));
+        assertEquals("e5", review.played());
+        assertEquals("Nf6", review.suggested());
+    }
+
+    @Test
+    void aReviewNeedsAnExistingMove() {
+        engine.plays("coach", "e2e4");
+        games.save(Games.play("e2e4"));
+
+        assertThrows(IllegalArgumentException.class, () -> reviewMove.execute(new MoveToReview("test", -1)));
+        assertThrows(IllegalArgumentException.class, () -> reviewMove.execute(new MoveToReview("test", 1)));
+        assertThrows(GameNotFoundException.class, () -> reviewMove.execute(new MoveToReview("missing", 0)));
     }
 
     @Test

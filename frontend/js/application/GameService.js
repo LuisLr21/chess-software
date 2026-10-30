@@ -19,6 +19,10 @@ export class GameService {
         throw new Error("Not implemented");
     }
 
+    async reviewMove(id, index) {
+        throw new Error("Not implemented");
+    }
+
     async aiLevels() {
         throw new Error("Not implemented");
     }

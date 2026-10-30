@@ -25,6 +25,7 @@ import software.ulpgc.chess.server.application.usecases.PlayAiMoveUseCase;
 import software.ulpgc.chess.server.application.usecases.RematchUseCase;
 import software.ulpgc.chess.server.application.usecases.ReportOpponentUseCase;
 import software.ulpgc.chess.server.application.usecases.ResignUseCase;
+import software.ulpgc.chess.server.application.usecases.ReviewMoveUseCase;
 import software.ulpgc.chess.server.application.usecases.SendMessageUseCase;
 import software.ulpgc.chess.server.infrastructure.adapters.ai.HttpChessEngine;
 import software.ulpgc.chess.server.infrastructure.adapters.http.ErrorHandlers;
@@ -41,6 +42,7 @@ import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.LegalM
 import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.MoveInRoomEndPoint;
 import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.MovePieceEndPoint;
 import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.ReportOpponentEndPoint;
+import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.ReviewMoveEndPoint;
 import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.RoomActionEndPoint;
 import software.ulpgc.chess.server.infrastructure.adapters.http.endpoints.SendMessageEndPoint;
 import software.ulpgc.chess.server.infrastructure.adapters.persistence.InMemoryChatRepository;
@@ -61,6 +63,8 @@ import java.time.Clock;
 import java.time.Duration;
 
 public class Main {
+    private static final String REVIEW_LEVEL = "expert";
+
     public static void main(String[] args) {
         GameRepository games;
         RoomRepository rooms;
@@ -92,6 +96,7 @@ public class Main {
         GetLegalMovesUseCase legalMoves = new GetLegalMovesUseCase(games);
         MovePieceUseCase movePiece = new MovePieceUseCase(games);
         PlayAiMoveUseCase aiMove = new PlayAiMoveUseCase(games, engine);
+        ReviewMoveUseCase reviewMove = new ReviewMoveUseCase(games, engine, REVIEW_LEVEL);
         GetAiLevelsUseCase aiLevels = new GetAiLevelsUseCase(engine);
         CreateRoomUseCase createRoom = new CreateRoomUseCase(games, rooms);
         JoinRoomUseCase joinRoom = new JoinRoomUseCase(games, rooms, notifier, clock);
@@ -116,6 +121,7 @@ public class Main {
             config.routes.get("/games/{id}/moves", ctx -> LegalMovesEndPoint.use(legalMoves, ctx).execute());
             config.routes.post("/games/{id}/moves", ctx -> MovePieceEndPoint.use(movePiece, ctx).execute());
             config.routes.post("/games/{id}/ai-move", ctx -> AiMoveEndPoint.use(aiMove, ctx).execute());
+            config.routes.get("/games/{id}/moves/{index}/review", ctx -> ReviewMoveEndPoint.use(reviewMove, ctx).execute());
             config.routes.get("/ai/levels", ctx -> AiLevelsEndPoint.use(aiLevels, ctx).execute());
 
             config.routes.post("/rooms", ctx -> CreateRoomEndPoint.use(createRoom, ctx).execute());

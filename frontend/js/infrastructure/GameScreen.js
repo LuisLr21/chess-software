@@ -87,6 +87,10 @@ export class GameScreen {
         if (message.author !== this.#match?.you) this.#sounds.notify();
     }
 
+    addComment(message) {
+        this.#chat.add(message);
+    }
+
     addReport(report) {
         this.#chat.addSystem(reportText(report, this.#match));
         if (report.reporter !== this.#match?.you) this.#sounds.notify();

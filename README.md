@@ -63,7 +63,7 @@ Como **idea propia**, se puede jugar también **contra la IA** con cuatro nivele
 | Interfaz retro 16-bit: piezas pixel-art propias, sonidos 8-bit | ✅ |
 | **Idea propia**: jugar contra la IA (fácil, medio, difícil y experto; con blancas o negras) | ✅ |
 | IA servida como un web service propio (`chess-ai-service`) | ✅ |
-| Tests automáticos (JUnit 6, 208 tests) | ✅ |
+| Tests automáticos (JUnit 6, 212 tests) | ✅ |
 
 ## Capturas
 
@@ -604,14 +604,17 @@ Un tercer modo de juego, **VS IA**, además de *Multijugador* y *Local*. En la p
 
 Mientras la IA piensa, el panel del jugador muestra *Pensando...*. Si eliges negras, la IA hace la primera jugada.
 
+Además, la CPU **comenta cada jugada en el chat**: analiza la posición de antes de tu movimiento y te dice si coincide con lo que habría jugado o qué habría jugado en su lugar. Sirve para aprender mientras practicas. Solo existe en este modo, porque en una partida contra otra persona sería una ayuda externa.
+
 ### Cómo está hecho
 
 - **Dominio** (`chess-ai-service`, `application/domain/`): la interfaz `Engine` tiene un único método, `Move chooseMove(Position)`. Cada nivel es una implementación (**patrón Strategy**). `PositionEvaluator` puntúa una posición por material (`PieceValues`, en centésimas de peón: peón 100, caballo y alfil 300, torre 500, dama 900). En minimax, un mate vale más cuanto antes llega y las tablas valen 0.
 - **Nivel experto**: `ExpertEngine` busca primero a profundidad 1, luego 2, 3... hasta agotar el tiempo, y se queda con la última búsqueda completa (*iterative deepening*); la mejor jugada de una vuelta se prueba la primera en la siguiente. `MoveOrdering` ordena las jugadas para que alfa-beta pode más (primero comer la pieza más valiosa con la menos valiosa). Al llegar a la profundidad límite no evalúa sin más: sigue mirando solo capturas hasta que la posición queda tranquila (*quiescencia*, con `LegalMoveGenerator.allLegalCaptures`), así no cae en el efecto horizonte de comer un peón con la dama sin ver que se la comen después. `PositionalEvaluator` suma al material las tablas pieza-casilla de `PieceSquareTables` (otra tabla para el rey en el final) y, en finales ganados, premia acercar el rey propio y llevar el rival al borde.
 - **Servicio propio**: los motores viven en `chess-ai-service`, un web service aparte con dos rutas, `GET /levels` y `POST /best-move`. Su `Main` registra los motores en un mapa ordenado (`random`, `greedy`, `minimax`, `expert`).
 - **Aplicación** (`chess-server`): `PlayAiMoveUseCase` carga la partida, pide el movimiento a través del puerto `ChessEngine`, lo juega con las mismas reglas que cualquier otro movimiento y lo guarda. `GetAiLevelsUseCase` dice qué niveles hay. Ninguno de los dos sabe que la IA está en otro proceso.
+- **Comentario de jugadas** (`chess-server`): `ReviewMoveUseCase` reconstruye la partida justo antes de la jugada indicada, pide la mejor jugada por el mismo puerto `ChessEngine` y compara. Siempre analiza con el nivel experto, sea cual sea el rival, porque es el único que valora la posición. Recibe el índice de la jugada, no "la última", para que el resultado no dependa de si la CPU ya ha respondido. El servicio de IA no ha cambiado: es otro consumidor de `POST /best-move`.
 - **Infraestructura** (`chess-server`): `HttpChessEngine` implementa `ChessEngine` llamando al servicio de IA. Para el frontend nada cambia: sigue usando `POST /games/{id}/ai-move?level=...` y `GET /ai/levels`.
-- **Frontend**: un caso de uso nuevo, `AiGame`, al lado de `LocalGame` y `OnlineGame`. El lobby construye los botones de nivel a partir de `GET /ai/levels`.
+- **Frontend**: un caso de uso nuevo, `AiGame`, al lado de `LocalGame` y `OnlineGame`. El lobby construye los botones de nivel a partir de `GET /ai/levels`. El comentario se pide sin esperar la respuesta, así que la CPU juega sin retraso; si falla, se omite sin interrumpir la partida.
 
 ### Por qué encaja con el trabajo
 
@@ -639,6 +642,7 @@ Todas las peticiones y respuestas son JSON. Los errores siempre tienen la forma 
 | `GET` | `/games/{id}/moves?from=e2` | Casillas a las que puede moverse la pieza de `from` | 200, 400, 404 |
 | `POST` | `/games/{id}/moves` | Realiza un movimiento | 200, 400, 404, 409, 422 |
 | `POST` | `/games/{id}/ai-move?level=random` | La IA del nivel indicado juega el movimiento del bando que mueve | 200, 400, 404, 409, 503 |
+| `GET` | `/games/{id}/moves/{index}/review` | Compara la jugada número `index` (desde 0) con la que habría elegido el motor. Devuelve `{ "played": "e4", "suggested": "Nf3", "best": false }` | 200, 400, 404, 503 |
 | `GET` | `/ai/levels` | Niveles de IA disponibles, en orden | 200, 503 |
 
 ### Salas
@@ -782,14 +786,14 @@ Una partida registrada se consulta con `GET /games/{id}` (estado e historial com
 
 ### Tests automáticos
 
-**208 tests JUnit**, todos en verde:
+**212 tests JUnit**, todos en verde:
 
 ```
 mvn test
 ...
 [INFO] Tests run: 98, Failures: 0, Errors: 0, Skipped: 0     (chess-core)
 [INFO] Tests run: 46, Failures: 0, Errors: 0, Skipped: 0     (chess-ai-service)
-[INFO] Tests run: 64, Failures: 0, Errors: 0, Skipped: 0     (chess-server)
+[INFO] Tests run: 68, Failures: 0, Errors: 0, Skipped: 0     (chess-server)
 [INFO] BUILD SUCCESS
 ```
 
@@ -801,7 +805,7 @@ Están en `src/test/java` de cada módulo, en el mismo paquete que la clase que 
 | `chess-ai-service` `application.domain` | Random siempre juega un movimiento legal; greedy captura la pieza de más valor; minimax encuentra el mate en una (con blancas y con negras) y no captura un peón defendido con la dama; experto encuentra el mate en una y en dos, y gracias a la quiescencia no se come el peón defendido ni siquiera a profundidad 1; el evaluador posicional es simétrico y prefiere un caballo centrado |
 | `chess-ai-service` `application.usecases` | El motor del nivel recibe la posición que resulta de las jugadas; nivel desconocido, jugada ilegal y partida terminada se rechazan |
 | `chess-server` `application.domain` | Reglas de la sala, asientos y chat |
-| `chess-server` `application.usecases` | Casos de uso con repositorios en memoria: crear y unirse a salas, turnos, tiempo agotado, tablas, rendición, revancha, chat, partidas locales, IA (con `FakeChessEngine`), abandono y reportes (tiempo gastado por el rival, un reporte por partida, solo jugadores) |
+| `chess-server` `application.usecases` | Casos de uso con repositorios en memoria: crear y unirse a salas, turnos, tiempo agotado, tablas, rendición, revancha, chat, partidas locales, IA y comentario de jugadas (con `FakeChessEngine`), abandono y reportes (tiempo gastado por el rival, un reporte por partida, solo jugadores) |
 | `chess-server` `infrastructure.adapters.persistence` | Los repositorios SQLite guardan y recuperan partidas (con promociones, final y reloj), salas, mensajes y reportes, sobre una base de datos temporal, también tras cerrarla y volver a abrirla |
 | `chess-server` `infrastructure.adapters.ai` | `HttpChessEngine` contra un servicio de IA falso levantado con Javalin en un puerto libre: envía la partida como lista de jugadas, convierte la respuesta en un `Move` y avisa si el servicio falla o no está |
 
@@ -824,7 +828,7 @@ Hechas sobre el sistema completo, con el backend real, SQLite y dos navegadores.
 
 | Comprobación | Resultado |
 |---|---|
-| Ejecutar desde una copia limpia | `git clone` del repositorio en una carpeta vacía → `mvn test` (208 tests en verde) → arrancar los dos servicios → la página carga en `http://localhost:7070`, `GET /ai/levels` devuelve `["random","greedy","minimax","expert"]` (obtenidos del servicio de IA) y `POST /rooms` devuelve `201` |
+| Ejecutar desde una copia limpia | `git clone` del repositorio en una carpeta vacía → `mvn test` (212 tests en verde) → arrancar los dos servicios → la página carga en `http://localhost:7070`, `GET /ai/levels` devuelve `["random","greedy","minimax","expert"]` (obtenidos del servicio de IA) y `POST /rooms` devuelve `201` |
 | Crear una sala y unir a dos usuarios | Luis crea la sala `5QNMRL`, Ana se une con el código desde otro navegador (capturas 2, 3 y 4) |
 | Registrar varios movimientos | 19 medios movimientos de una apertura italiana, con capturas, jaques y desambiguación (`Nbxd2`). Cada jugador ve los del otro en tiempo real |
 | Consultar el histórico | `GET /games/{id}` devuelve los 19 movimientos en UCI y en SAN, y las piezas capturadas |
@@ -872,7 +876,7 @@ En la interfaz, estos errores aparecen como un aviso en la franja de turno (por 
 - **Historial de una sala**: tras una revancha, la sala apunta a la partida nueva. La anterior sigue guardada (tablas `games` y `moves`) y se puede consultar por su id con `GET /games/{id}`, pero la sala no guarda la lista de sus partidas anteriores. Tampoco hay una lista pública de salas: para entrar hace falta el código.
 - **Concurrencia**: los casos de uso de sala están sincronizados, lo que es suficiente para un único servidor. Con varios servidores haría falta coordinarlos (por ejemplo, con la base de datos), y SQLite no está pensada para eso.
 - **Comunicación**: los avisos en tiempo real dependen de que el WebSocket esté abierto. Si se cae, el cliente se reconecta solo y pide el estado actual, así que no se pierde nada, pero durante el corte el jugador no ve las jugadas del rival. No hay HTTPS: está pensado para ejecutarse en local o en una red de confianza.
-- **IA**: los niveles fácil a difícil buscan a profundidad fija y solo evalúan el material. El experto evalúa también la posición, pero no entiende estrategia a largo plazo (estructura de peones...) y, como no detecta la triple repetición, puede repetir jugadas en una posición ganada. Si `chess-ai-service` no está arrancado, el modo *VS IA* no está disponible.
+- **IA**: los niveles fácil a difícil buscan a profundidad fija y solo evalúan el material. El experto evalúa también la posición, pero no entiende estrategia a largo plazo (estructura de peones...) y, como no detecta la triple repetición, puede repetir jugadas en una posición ganada. El comentario de jugadas solo dice qué jugada elegiría el motor, no cuánto peor es la tuya, así que también propone alternativas a jugadas que eran buenas. Si `chess-ai-service` no está arrancado, el modo *VS IA* no está disponible.
 - **Abandono**: se detecta cuando se cierra el WebSocket. Si un ordenador se queda sin red sin cerrar la conexión, el servidor tarda más en enterarse (hasta que la conexión caduca).
 - **Reportes**: quedan registrados pero no cambian el resultado ni sancionan a nadie automáticamente; no hay un panel para revisarlos, solo `GET /rooms/{code}/reports`.
 - **Frontend**: sin tests automáticos; verificado manualmente.

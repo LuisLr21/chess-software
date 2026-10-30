@@ -34,6 +34,7 @@ export class AiGame {
     async move(from, to, promotion) {
         try {
             this.#game = await this.#service.move(this.#game.id, from, to, promotion);
+            this.#reviewMove(this.#game);
         } catch (error) {
             this.#screen.showError(error);
         }
@@ -61,6 +62,21 @@ export class AiGame {
         if (this.#game?.id === game.id) this.#show(this.#game);
     }
 
+    async #reviewMove(game) {
+        if (game.status !== "InProgress") return;
+        try {
+            const review = await this.#service.reviewMove(game.id, game.moves.length - 1);
+            if (this.#game?.id !== game.id) return;
+            this.#screen.addComment({
+                author: this.#color === "White" ? "Black" : "White",
+                authorName: "CPU",
+                text: reviewText(review)
+            });
+        } catch {
+            return;
+        }
+    }
+
     #show(game) {
         this.#game = game;
         const human = { name: this.#name || "Jugador", joined: true, online: true };
@@ -78,4 +94,9 @@ export class AiGame {
             rematchOfferedBy: null
         });
     }
+}
+
+function reviewText(review) {
+    if (review.best) return `¡Buena jugada! ${review.played} es lo que yo habría jugado.`;
+    return `En lugar de ${review.played}, yo habría jugado ${review.suggested}.`;
 }

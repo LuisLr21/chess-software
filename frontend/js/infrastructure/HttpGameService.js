@@ -29,6 +29,10 @@ export class HttpGameService extends GameService {
         return request(this.#baseUrl, "POST", `/games/${id}/ai-move?level=${level}`);
     }
 
+    async reviewMove(id, index) {
+        return request(this.#baseUrl, "GET", `/games/${id}/moves/${index}/review`);
+    }
+
     async aiLevels() {
         return request(this.#baseUrl, "GET", "/ai/levels");
     }

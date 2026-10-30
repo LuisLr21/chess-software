@@ -72,6 +72,11 @@ export class MockGameService extends GameService {
         return this.move(id, from, to);
     }
 
+    async reviewMove(id, index) {
+        const game = await this.getGame(id);
+        return { played: game.san[index], suggested: game.san[index], best: true };
+    }
+
     async aiLevels() {
         return ["random"];
     }
