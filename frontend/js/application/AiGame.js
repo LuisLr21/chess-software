@@ -64,17 +64,13 @@ export class AiGame {
 
     async #reviewMove(game) {
         if (game.status !== "InProgress") return;
-        try {
-            const review = await this.#service.reviewMove(game.id, game.moves.length - 1);
-            if (this.#game?.id !== game.id) return;
-            this.#screen.addComment({
-                author: this.#color === "White" ? "Black" : "White",
-                authorName: "CPU",
-                text: reviewText(review)
-            });
-        } catch {
-            return;
-        }
+        const review = await this.#service.reviewMove(game.id, game.moves.length - 1).catch(() => null);
+        if (review === null || this.#game?.id !== game.id) return;
+        this.#screen.addComment({
+            author: this.#color === "White" ? "Black" : "White",
+            authorName: "CPU",
+            text: reviewText(review)
+        });
     }
 
     #show(game) {

@@ -446,7 +446,7 @@ main.js           Raíz de composición: elige los adaptadores y los conecta.
 
 **Inyección de dependencias.** Ningún caso de uso hace `new` de un adaptador: los recibe ya construidos por el constructor. Quien decide qué implementación se usa es `Main`:
 
-```java
+```text
 ChessEngine engine = new HttpChessEngine(System.getenv().getOrDefault("AI_SERVICE", "http://localhost:7071"));
 new PlayAiMoveUseCase(games, engine);
 ```
@@ -691,7 +691,7 @@ Estado de una sala:
 
 Eventos del WebSocket. El token va en la URL porque un WebSocket del navegador no puede llevar cabeceras propias; sirve para saber qué jugador está conectado.
 
-```json
+```text
 { "type": "room", "room": { "…": "…" } }
 { "type": "presence", "white": true, "black": false }
 { "type": "chat", "message": { "author": "White", "authorName": "Luis", "text": "¡Suerte!", "sentAt": "2026-10-21T16:00:00Z" } }
@@ -709,7 +709,7 @@ Lo usa `chess-server`, pero es independiente: cualquier cliente HTTP puede pedir
 | `GET` | `/levels` | Niveles disponibles, en orden: `["random","greedy","minimax","expert"]` | 200 |
 | `POST` | `/best-move` | Jugada del nivel indicado para la partida que forman las jugadas recibidas | 200, 400, 409, 422 |
 
-```json
+```text
 POST /best-move
 { "level": "expert", "moves": ["e2e4", "e7e5", "g1f3"] }
 
